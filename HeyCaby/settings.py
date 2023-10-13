@@ -33,6 +33,7 @@ INSTALLED_APPS = [
 
     'operators',
     'drivers',
+    'payments',
 ]
 
 MIDDLEWARE = [
