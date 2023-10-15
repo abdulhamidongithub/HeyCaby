@@ -21,7 +21,11 @@ class Driver(models.Model):
     balance = models.PositiveIntegerField(default=0)
     has_baggage = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    category = models.ForeignKey(CarCategory, on_delete=models.SET_NULL, null=True)
+    category = models.ForeignKey(
+        CarCategory,
+        on_delete=models.SET_NULL,
+        null=True
+    )
 
     def __str__(self):
         return f"{self.fullname} - {self.phone}"
