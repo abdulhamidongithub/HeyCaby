@@ -6,6 +6,7 @@ class CarCategory(models.Model):
     waiting_cost = models.PositiveIntegerField()
     bonus_percent = models.PositiveIntegerField()
     baggage_cost = models.PositiveIntegerField()
+    sum_for_per_km = models.PositiveIntegerField(default=1500)
 
     def __str__(self):
         return self.type

@@ -1,5 +1,5 @@
 from django.db import models
-from drivers.models import *
+from drivers.models import Driver, CarCategory
 
 class Client(models.Model):
     phone = models.CharField(max_length=15)
