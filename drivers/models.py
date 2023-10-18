@@ -13,7 +13,7 @@ class CarCategory(models.Model):
 
 class Driver(models.Model):
     fullname = models.CharField(max_length=40)
-    phone = models.CharField(max_length=15)
+    phone = models.CharField(max_length=15, unique=True)
     car_type = models.CharField(max_length=30)
     car_number = models.CharField(max_length=10)
     sms_code = models.CharField(max_length=30)
