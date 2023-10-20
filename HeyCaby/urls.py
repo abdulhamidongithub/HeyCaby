@@ -20,4 +20,5 @@ urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('operators/', include('operators.urls')),
     path('drivers/', include('drivers.urls')),
+    path('payments/', include('payments.urls')),
 ]

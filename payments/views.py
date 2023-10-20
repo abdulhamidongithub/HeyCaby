@@ -4,14 +4,15 @@ from clickuz.status import PREPARE, COMPLETE, AUTHORIZATION_FAIL_CODE, AUTHORIZA
 from clickuz import ClickUz
 from clickuz.views import ClickUzMerchantAPIView
 from rest_framework.views import APIView
+from rest_framework.response import Response
 
 from .serializers import PaymentSerializer
+from .models import *
 
-# class ClickAPIView(APIView):
-#     def post(self, request):
-#         serializer = PaymentSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#
-#         valid_data = serializer.validated_data
+class PaymentsAPIView(APIView):
+    def get(self, request):
+        payments = Payment.objects.all()
+        serializer = PaymentSerializer(payments, many=True)
+        return Response(serializer.data)
 
 
