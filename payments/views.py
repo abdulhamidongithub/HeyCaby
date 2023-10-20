@@ -12,6 +12,19 @@ from .models import *
 class PaymentsAPIView(APIView):
     def get(self, request):
         payments = Payment.objects.all()
+        phone_num = request.query_params.get("phone")
+        type = request.query_params.get("type")
+        reciever = request.query_params.get("reciever")
+        driver_name = request.query_params.get("name")
+        date = request.query_params.get("date")
+        if date or type or phone_num or reciever or driver_name:
+            payments = (
+                    payments.filter(date = date)
+                    | payments.filter(driver__fullname__contains = driver_name)
+                    | payments.filter(driver__phone__contains = phone_num)
+                    | payments.filter(reciever = reciever)
+                    | payments.filter(type = type)
+            )
         serializer = PaymentSerializer(payments, many=True)
         return Response(serializer.data)
 
