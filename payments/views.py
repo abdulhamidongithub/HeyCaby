@@ -28,4 +28,8 @@ class PaymentsAPIView(APIView):
         serializer = PaymentSerializer(payments, many=True)
         return Response(serializer.data)
 
+    def post(self, request):
+        payment = request.data
+        serializer = PaymentSerializer(data=payment)
+        serializer.is_valid(raise_exception=True)
 
