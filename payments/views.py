@@ -5,6 +5,7 @@ from clickuz import ClickUz
 from clickuz.views import ClickUzMerchantAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 
 from .serializers import PaymentSerializer
 from .models import *
@@ -32,4 +33,7 @@ class PaymentsAPIView(APIView):
         payment = request.data
         serializer = PaymentSerializer(data=payment)
         serializer.is_valid(raise_exception=True)
+        if payment.get("type") == "Office":
+            serializer.save(completed=True)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
