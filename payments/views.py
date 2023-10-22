@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from .serializers import PaymentSerializer
+from .serializers import PaymentSerializer, PaymentReadSerializer
 from .models import *
 
 class PaymentsAPIView(APIView):
@@ -26,14 +26,36 @@ class PaymentsAPIView(APIView):
                     | payments.filter(reciever = reciever)
                     | payments.filter(type = type)
             )
-        serializer = PaymentSerializer(payments, many=True)
+        serializer = PaymentReadSerializer(payments, many=True)
         return Response(serializer.data)
 
     def post(self, request):
         payment = request.data
         serializer = PaymentSerializer(data=payment)
         serializer.is_valid(raise_exception=True)
+        valid_data = serializer.validated_data
         if payment.get("type") == "Office":
-            serializer.save(completed=True)
+            Payment.objects.create(
+                driver = Driver.objects.get(id=valid_data.get("driver")),
+                amount = valid_data.get("amount"),
+                type = valid_data.get("type"),
+                reciever = valid_data.get("reciever"),
+                completed = True
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
+        elif payment.get("type") == "Click":
+            payment = Payment.objects.create(
+                driver=Driver.objects.get(id=valid_data.get("driver")),
+                amount=valid_data.get("amount"),
+                type=valid_data.get("type"),
+                reciever=valid_data.get("reciever"),
+                completed = False
+            )
+            url = ClickUz.generate_url(
+                order_id=str(payment.driver.phone),
+                amount=str(payment.amount)
+            )
+            return Response({
+                "link": url
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
