@@ -9,6 +9,7 @@ from rest_framework import status
 
 from .serializers import PaymentSerializer, PaymentReadSerializer
 from .models import *
+from driver.models import Driver
 
 class PaymentsAPIView(APIView):
     def get(self, request):
@@ -59,3 +60,20 @@ class PaymentsAPIView(APIView):
                 "link": url
             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class OrderCheckAndPayment(ClickUz):
+    def check_order(self, order_id: str, amount: str, *args, **kwargs):
+        driver = Driver.objects.filter(phone=order_id)
+        if not driver.exists():
+            return self.ORDER_NOT_FOUND
+        charge = Payment.objects.filter(driver__phone=order_id, amount=amount, type='Click')
+        if charge.exists():
+            charge = charge.last()
+            if charge.amount ==int(amount):
+                return self.ORDER_FOUND
+            else:
+                charge.amount = int(amount)
+                charge.completed = False
+                charge.save()
+                return self.ORDER_FOUND
+
