@@ -76,4 +76,12 @@ class OrderCheckAndPayment(ClickUz):
                 charge.completed = False
                 charge.save()
                 return self.ORDER_FOUND
+        else:
+            Payment.objects.create(
+                driver=Driver.objects.get(phone=order_id),
+                amount=int(amount),
+                type="Click",
+                completed=False
+            )
+            return self.ORDER_FOUND
 
