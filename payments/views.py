@@ -6,6 +6,7 @@ from clickuz.views import ClickUzMerchantAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.db import transaction
 
 from .serializers import PaymentSerializer, PaymentReadSerializer
 from .models import *
@@ -85,3 +86,19 @@ class OrderCheckAndPayment(ClickUz):
             )
             return self.ORDER_FOUND
 
+    @transaction.atomic()
+    def successfully_payment(self, order_id: str, transaction: object, *args, **kwargs):
+        charge = Payment.objects.filter(driver__phone=order_id, completed=False)
+        if charge.exists():
+            charge = charge.last()
+            charge.completed = True
+            charge.save()
+            driver = Driver.objects.get(phone=order_id)
+            driver.balance += int(transaction.amount)
+            driver.save()
+            return True
+        else:
+            return False
+
+class ClickView(ClickUzMerchantAPIView):
+    VALIDATE_CLASS = OrderCheckAndPayment
