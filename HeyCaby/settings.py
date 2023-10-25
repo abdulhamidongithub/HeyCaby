@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'clickuz',
+    'paycomuz',
 
     'operators',
     'drivers',
