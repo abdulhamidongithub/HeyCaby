@@ -128,3 +128,13 @@ CLICK_SETTINGS = {
     "merchant_user_id": env("MERCH_USER_ID")
 }
 
+PAYCOM_SETTINGS = {
+    "KASSA_ID": env("KASSA_ID"),
+    "TOKEN": env("KASSA_ID"),
+    "SECRET_KEY": env("PAYCOM_SECRET_KEY"),
+    # "TEST_KEY" : env("TEST_KEY"),
+    "ACCOUNTS": {
+        "KEY": "abonent_id"
+    }
+}
+
