@@ -1,6 +1,8 @@
 from django.urls import path
 
 from .views import *
+from .payme_views import *
+from .click_views import *
 
 urlpatterns = [
     path("", PaymentsAPIView.as_view()),
