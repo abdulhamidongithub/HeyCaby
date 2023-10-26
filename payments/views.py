@@ -131,7 +131,7 @@ class CheckOrder(Paycom):
             )
             return self.ORDER_FOUND
 
-
+    @transaction.atomic()
     def successfully_payment(self, account, transaction, *args, **kwargs):
         transaction = Transaction.objects.filter(_id=account["id"])
         if transaction.exists():
