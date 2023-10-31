@@ -4,7 +4,8 @@ from paycomuz.models import Transaction
 from django.db import transaction
 
 from .models import *
-from driver.models import Driver
+from drivers.models import Driver
+
 
 class CheckOrder(Paycom):
     def check_order(self, amount, account, *args, **kwargs):
