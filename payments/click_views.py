@@ -3,7 +3,8 @@ from clickuz.views import ClickUzMerchantAPIView
 from django.db import transaction
 
 from .models import *
-from driver.models import Driver
+from drivers.models import Driver
+
 
 class OrderCheckAndPayment(ClickUz):
     def check_order(self, order_id: str, amount: str, *args, **kwargs):
@@ -13,7 +14,7 @@ class OrderCheckAndPayment(ClickUz):
         charge = Payment.objects.filter(driver__phone=order_id, amount=amount, type='Click')
         if charge.exists():
             charge = charge.last()
-            if charge.amount ==int(amount):
+            if charge.amount == int(amount):
                 return self.ORDER_FOUND
             else:
                 charge.amount = int(amount)
@@ -43,6 +44,6 @@ class OrderCheckAndPayment(ClickUz):
         else:
             return False
 
+
 class ClickView(ClickUzMerchantAPIView):
     VALIDATE_CLASS = OrderCheckAndPayment
-
