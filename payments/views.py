@@ -6,7 +6,8 @@ from paycomuz import Paycom
 
 from .serializers import PaymentSerializer, PaymentReadSerializer
 from .models import *
-from driver.models import Driver
+from drivers.models import Driver
+
 
 class PaymentsAPIView(APIView):
     def get(self, request):
@@ -18,11 +19,11 @@ class PaymentsAPIView(APIView):
         date = request.query_params.get("date")
         if date or type or phone_num or reciever or driver_name:
             payments = (
-                    payments.filter(date = date)
-                    | payments.filter(driver__fullname__contains = driver_name)
-                    | payments.filter(driver__phone__contains = phone_num)
-                    | payments.filter(reciever = reciever)
-                    | payments.filter(type = type)
+                    payments.filter(date=date)
+                    | payments.filter(driver__fullname__contains=driver_name)
+                    | payments.filter(driver__phone__contains=phone_num)
+                    | payments.filter(reciever=reciever)
+                    | payments.filter(type=type)
             )
         serializer = PaymentReadSerializer(payments, many=True)
         return Response(serializer.data)
@@ -34,11 +35,11 @@ class PaymentsAPIView(APIView):
         valid_data = serializer.validated_data
         if payment.get("type") == "Office":
             Payment.objects.create(
-                driver = Driver.objects.get(id=valid_data.get("driver")),
-                amount = valid_data.get("amount"),
-                type = valid_data.get("type"),
-                reciever = valid_data.get("reciever"),
-                completed = True
+                driver=Driver.objects.get(id=valid_data.get("driver")),
+                amount=valid_data.get("amount"),
+                type=valid_data.get("type"),
+                reciever=valid_data.get("reciever"),
+                completed=True
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif payment.get("type") == "Click":
@@ -47,7 +48,7 @@ class PaymentsAPIView(APIView):
                 amount=valid_data.get("amount"),
                 type=valid_data.get("type"),
                 reciever=valid_data.get("reciever"),
-                completed = False
+                completed=False
             )
             url = ClickUz.generate_url(
                 order_id=str(payment.driver.phone),
