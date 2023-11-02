@@ -6,7 +6,7 @@ from paycomuz import Paycom
 
 from .serializers import PaymentSerializer, PaymentReadSerializer
 from .models import *
-from drivers.models import Driver
+from drivers.models import Drivers
 
 
 class PaymentsAPIView(APIView):
@@ -35,7 +35,7 @@ class PaymentsAPIView(APIView):
         valid_data = serializer.validated_data
         if payment.get("type") == "Office":
             Payment.objects.create(
-                driver=Driver.objects.get(id=valid_data.get("driver")),
+                driver=Drivers.objects.get(id=valid_data.get("driver")),
                 amount=valid_data.get("amount"),
                 type=valid_data.get("type"),
                 reciever=valid_data.get("reciever"),
@@ -44,7 +44,7 @@ class PaymentsAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif payment.get("type") == "Click":
             payment = Payment.objects.create(
-                driver=Driver.objects.get(id=valid_data.get("driver")),
+                driver=Drivers.objects.get(id=valid_data.get("driver")),
                 amount=valid_data.get("amount"),
                 type=valid_data.get("type"),
                 reciever=valid_data.get("reciever"),
@@ -59,7 +59,7 @@ class PaymentsAPIView(APIView):
             }, status=status.HTTP_200_OK)
         elif payment.get("type") == "Payme":
             payment = Payment.objects.create(
-                driver=Driver.objects.get(id=valid_data.get("driver")),
+                driver=Drivers.objects.get(id=valid_data.get("driver")),
                 amount=valid_data.get("amount"),
                 type=valid_data.get("type"),
                 reciever=valid_data.get("reciever"),
