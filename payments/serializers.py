@@ -3,10 +3,12 @@ from rest_framework.exceptions import ValidationError
 
 from .models import *
 
+
 class PaymentReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = '__all__'
+
 
 class PaymentSerializer(serializers.Serializer):
     amount = serializers.IntegerField()
@@ -18,4 +20,3 @@ class PaymentSerializer(serializers.Serializer):
         if value not in ["Office", "Payme", "Click"]:
             raise ValidationError("The type should be one of these three: Payme/Click/Office")
         return value
-
