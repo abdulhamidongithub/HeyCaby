@@ -1,5 +1,5 @@
 from django.db import models
-from drivers.models import Driver
+from drivers.models import Drivers
 
 PAYMENT_TYPES = [
     ("Click", "Click"),
@@ -7,17 +7,18 @@ PAYMENT_TYPES = [
     ("Office", "Office"),
 ]
 
+
 class Payment(models.Model):
-    driver = models.ForeignKey(Driver, on_delete=models.SET_NULL, null=True)
+    driver = models.ForeignKey(Drivers, on_delete=models.SET_NULL, null=True)
     amount = models.PositiveIntegerField()
     date = models.DateField(auto_now_add=True)
     type = models.CharField(
-        max_length = 50,
-        choices = PAYMENT_TYPES
+        max_length=50,
+        choices=PAYMENT_TYPES
     )
     reciever = models.CharField(
         max_length=30,
-        blank = True
+        blank=True
     )
     completed = models.BooleanField(default=False)
 

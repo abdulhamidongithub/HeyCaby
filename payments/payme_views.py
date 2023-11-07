@@ -4,11 +4,12 @@ from paycomuz.models import Transaction
 from django.db import transaction
 
 from .models import *
-from driver.models import Driver
+from drivers.models import Drivers
+
 
 class CheckOrder(Paycom):
     def check_order(self, amount, account, *args, **kwargs):
-        driver = Driver.objects.filter(phone=account["order_id"])
+        driver = Drivers.objects.filter(phone=account["order_id"])
         if not driver.exists():
             return self.ORDER_NOT_FOND
         charge = Payment.objects.filter(driver__phone=account["order_id"], completed=False)
@@ -22,7 +23,7 @@ class CheckOrder(Paycom):
                 return self.ORDER_FOUND
         else:
             Payment.objects.create(
-                driver=Driver.objects.get(phone=account["order_id"]),
+                driver=Drivers.objects.get(phone=account["order_id"]),
                 amount=int(amount),
                 type="Payme",
                 completed=False
@@ -36,7 +37,7 @@ class CheckOrder(Paycom):
             charge = Payment.objects.filter(driver__phone=account["order_id"])
             if charge.exists():
                 charge = charge.last()
-                driver = Driver.objects.get(id=charge.driver.id)
+                driver = Drivers.objects.get(id=charge.driver.id)
                 driver.balance += charge.amount
                 driver.save()
                 charge.completed = True

@@ -1,5 +1,6 @@
 from django.db import models
-from drivers.models import Driver, CarCategory
+from drivers.models import Drivers, CarCategory
+
 
 class Client(models.Model):
     phone = models.CharField(max_length=15)
@@ -8,9 +9,10 @@ class Client(models.Model):
     def __str__(self):
         return self.phone
 
+
 class Order(models.Model):
     client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True)
-    driver = models.ForeignKey(Driver, on_delete=models.SET_NULL, null=True)
+    driver = models.ForeignKey(Drivers, on_delete=models.SET_NULL, null=True)
     total_sum = models.PositiveIntegerField(default=0)
     finished = models.BooleanField(default=False)
     baggage = models.BooleanField(default=False)
@@ -25,4 +27,5 @@ class Order(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     waiting_seconds = models.PositiveSmallIntegerField(default=0)
 
-
+    def __str__(self):
+        return self.client.phone
