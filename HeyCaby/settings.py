@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'channels',
     'rest_framework_simplejwt',
     'drf_yasg',
     'clickuz',
@@ -40,7 +41,16 @@ INSTALLED_APPS = [
     'drivers',
     'user',
     'payments',
+    'testapp',
 ]
+
+ASGI_APPLICATION = "medlandDjango.asgi.application"   # asgi ni ishga tushrish
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'   # asinxron kanallarni boshqarish uchun
+    }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

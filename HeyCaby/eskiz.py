@@ -1,6 +1,6 @@
 import requests
-
-from decouple import config
+import environ
+env = environ.Env()
 
 SUCCESS = 200
 PROCESSING = 102
@@ -10,8 +10,8 @@ MESSAGE_IS_EMPTY = 170
 SMS_NOT_FOUND = 404
 SMS_SERVICE_NOT_TURNED = 600
 
-ESKIZ_EMAIL = config('ESKIZ_EMAIL')
-ESKIZ_PASSWORD = config('ESKIZ_PASSWORD')
+ESKIZ_EMAIL = env('ESKIZ_EMAIL')
+ESKIZ_PASSWORD = env('ESKIZ_PASSWORD')
 
 
 class SendSmsApiWithEskiz:
