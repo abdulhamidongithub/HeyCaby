@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'testapp',
 ]
 
-ASGI_APPLICATION = "medlandDjango.asgi.application"   # asgi ni ishga tushrish
+ASGI_APPLICATION = "HeyCaby.asgi.application"   # asgi ni ishga tushrish
 
 CHANNEL_LAYERS = {
     'default': {
