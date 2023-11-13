@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
-from drivers.models import Drivers
+from drivers.models import Drivers, DriverLocation
 from user.models import *
 from user.serializers import CustomUserSerializer
 
@@ -29,3 +29,13 @@ class DriversSerializer(serializers.ModelSerializer):
         instance.category = validated_data.get('category', instance.category)
         instance.save()
         return instance
+
+
+class DriverLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DriverLocation
+        fields = '__all__'
+        extra_kwargs = {
+            'driver': {'read_only': True},
+        }
+

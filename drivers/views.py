@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from drf_yasg import openapi
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -8,32 +10,13 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from HeyCaby.eskiz import SendSmsApiWithEskiz
-from drivers.models import Drivers
-from drivers.serializers import DriversSerializer
+from heycaby.eskiz import SendSmsApiWithEskiz
+from drivers.models import Drivers, DriverLocation
+from drivers.serializers import DriversSerializer, DriverLocationSerializer
+from operators.models import Order
 from user.models import CustomUser
 from user.serializers import CustomTokenSerializer
 from user.views import generate_sms_code, driver_chack
-
-
-class DriverCreateView(APIView):
-    @swagger_auto_schema(request_body=DriversSerializer)
-    def post(self, request):
-        """
-        Driver create
-        """
-        serializer = DriversSerializer(data=request.data)
-
-        if serializer.is_valid():
-            username = serializer.validated_data['username']
-
-            serializer.save(phone=username, role="driver")
-            return Response({'detail': 'Created, sms code has been sent!',
-                             'success': True,
-                             'data': serializer.data}, status=201)
-        return Response({'detail': 'Error',
-                         'success': False,
-                         'data': serializer.errors}, status=400)
 
 
 class DriverProfilView(APIView):
@@ -139,4 +122,154 @@ class DriverChackSmsCodeView(APIView):
                             status=403)
         return Response({'detail': 'Sms code is correct!',
                          'success': True}, status=200)
+
+
+class DriverLocationPost(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(request_body=DriverLocationSerializer)
+    def post(self, request):
+        """
+        Driver location create
+        """
+        driver_chack(request.user.role)
+        serializer = DriverLocationSerializer(data=request.data)
+
+        if serializer.is_valid():
+            driver = Drivers.objects.filter(id=request.user.id).first()
+            location = DriverLocation.objects.filter(driver__id=driver.id).first()
+            if location:
+                location.longitude = serializer.validated_data['longitude']
+                location.latitude = serializer.validated_data['latitude']
+                location.date = datetime.now()
+
+                location.save()
+
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    "driver_location_group",
+                    {
+                        "type": "add_new_driver_location",
+                    },
+                )
+
+                return Response({'success': True,
+                                 'data': serializer.data}, status=201)
+
+            serializer.save(driver=driver, date=datetime.now())
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "driver_location_group",
+                {
+                    "type": "add_new_driver_location",
+                },
+            )
+            return Response({'success': True,
+                             'data': serializer.data}, status=201)
+        return Response({'detail': 'Error',
+                         'success': False,
+                         'data': serializer.errors}, status=400)
+
+
+class DriverAccaptOrder(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('order_id', openapi.IN_QUERY, type=openapi.TYPE_STRING, required=True,
+                          description='order_id = Buyurtmani id si')])
+    def put(self, request):
+        driver_chack(request.user.role)
+
+        order_id = request.query_params.get('order_id')
+        driver = Drivers.objects.filter(id=request.user.id).first()
+
+        order = Order.objects.filter(id=order_id).first()
+        if order.order_status == 'active':
+            order.driver = driver
+            order.order_status = 'accept'
+            order.save()
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "order_group",
+                # WebSocket guruhi nomi (shu bo'yicha consumersdan qaysi websocketga jo'natish ajratib olinadi)
+                {
+                    "type": "add_new_order",
+                    # wensocket tomindagi yangi malumot kelganini qabul qilib oladigan funksiya
+                },
+            )
+            return Response({'success': True,
+                             'first_name': order.driver.first_name,
+                             'order_status': order.order_status,
+                             'phone': order.driver.phone,
+                             }, status=201)
+        return Response({'detail': 'Buyurtma Activ emas',
+                         'success': False}, status=400)
+
+
+class DriverStartOrder(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('order_id', openapi.IN_QUERY, type=openapi.TYPE_STRING, required=True,
+                          description='order_id = Buyurtmani id si')])
+    def put(self, request):
+        driver_chack(request.user.role)
+
+        order_id = request.query_params.get('order_id')
+        driver = Drivers.objects.filter(id=request.user.id).first()
+
+        order = Order.objects.filter(id=order_id).first()
+        if order.order_status == 'accept' and order.driver.id == request.user.id:
+            order.driver = driver
+            order.order_status = 'started'
+            order.save()
+            return Response({'success': True,
+                             'first_name': order.driver.first_name,
+                             'order_status': order.order_status,
+                             'phone': order.driver.phone,
+                             }, status=201)
+        return Response({'detail': 'Buyurtma mavjud emas',
+                         'success': False}, status=400)
+
+
+class DriverFinishedOrder(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('order_id', openapi.IN_QUERY, type=openapi.TYPE_STRING, required=True,
+                          description='order_id = Buyurtmani id si'),
+        openapi.Parameter('destination_lat', openapi.IN_QUERY, type=openapi.TYPE_STRING, required=True,
+                          description='destination_lat = Buyurtma tugagan manzil'),
+        openapi.Parameter('destination_long', openapi.IN_QUERY, type=openapi.TYPE_STRING, required=True,
+                          description='destination_long = Buyurtma tugagan manzil'),
+        openapi.Parameter('total_sum', openapi.IN_QUERY, type=openapi.TYPE_STRING, required=True,
+                          description='total_sum = Buyurtmani summasi')
+    ])
+    def put(self, request):
+        driver_chack(request.user.role)
+
+        order_id = request.query_params.get('order_id')
+
+        order = Order.objects.filter(id=order_id).first()
+        if order.order_status == 'started' and order.driver.id == request.user.id:
+            order.order_status = 'finished'
+            order.destination_lat = request.query_params.get('destination_lat')
+            order.destination_long = request.query_params.get('destination_long')
+            order.total_sum = request.query_params.get('total_sum')
+            order.save()
+            return Response({'success': True,
+                             'first_name': order.driver.first_name,
+                             'order_status': order.order_status,
+                             'phone': order.driver.phone,
+                             }, status=201)
+        return Response({'detail': 'Buyurtma Activ emas',
+                         'success': False}, status=400)
+
+
+
 

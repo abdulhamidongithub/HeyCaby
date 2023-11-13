@@ -12,9 +12,10 @@ from drf_yasg.utils import swagger_auto_schema
 
 import random
 
-from HeyCaby.eskiz import SendSmsApiWithEskiz
+from heycaby.eskiz import SendSmsApiWithEskiz
+from operators.models import Operators
 from user.models import CustomUser
-from user.serializers import CustomTokenSerializer
+from user.serializers import CustomTokenSerializer, OperatorTokenSerializer
 
 
 # user tekshiruv
@@ -52,4 +53,19 @@ class CustomUserTokenView(APIView):
         refresh = RefreshToken.for_user(user)
         serialized_user = CustomTokenSerializer(user).data
         return Response({'refresh': str(refresh), 'access': str(refresh.access_token), 'user': serialized_user})
+
+
+class OperatorTokenView(APIView):
+    @swagger_auto_schema(request_body=OperatorTokenSerializer, operation_description="username=phone")
+    def post(self, request):
+        """
+        username = phone number
+        """
+        user = Operators.objects.filter(username=request.data.get('username'), password=request.data.get('password')).first()
+        if user is None:
+            return Response({'error': 'User not found'}, status=404)
+        refresh = RefreshToken.for_user(user)
+        serialized_user = CustomTokenSerializer(user).data
+        return Response({'refresh': str(refresh), 'access': str(refresh.access_token), 'user': serialized_user})
+
 

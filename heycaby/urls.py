@@ -6,7 +6,7 @@ from drf_yasg import openapi
 
 schema_view = get_schema_view(
    openapi.Info(
-      title="HeyCaby Taxi app API",
+      title="heycaby Taxi app API",
       default_version='v1',
       description="Taxi app APIs for taxi drivers to get clients and calculate their cost based on the distances "
                   "between A to B destinations.",
