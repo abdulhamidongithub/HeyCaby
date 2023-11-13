@@ -1,6 +1,7 @@
 from rest_framework_simplejwt.tokens import AccessToken
 
 from drivers.models import Drivers
+from user.models import CustomUser
 from .serializers import *
 from asgiref.sync import sync_to_async
 import json
