@@ -9,6 +9,12 @@ class CustomTokenSerializer(serializers.ModelSerializer):
         fields = ('username',)
 
 
+class OperatorTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('username', 'password')
+
+
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser

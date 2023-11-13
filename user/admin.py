@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 
-from user.models import CustomUser, Driver2
+from user.models import CustomUser
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 
@@ -15,5 +15,4 @@ class CustomUserAdmin(BaseUserAdmin):
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
-admin.site.register(Driver2)
 

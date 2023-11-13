@@ -15,12 +15,6 @@ class CustomUser(AbstractUser):
         return f"{self.first_name} {self.username} {self.role}"
 
 
-class Driver2(CustomUser):
-    fullname = models.CharField(max_length=40)
-
-    class Meta:
-        verbose_name = "Driver2"
-
 # class CustomUser2(AbstractUser):
 #     username = None
 #     password = None
