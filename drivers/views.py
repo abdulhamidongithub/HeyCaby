@@ -114,7 +114,7 @@ class DriverChackSmsCodeView(APIView):
             return Response({'detail': 'Sms code is not active!', 'success': False}, status=403)
         yuborilgan_vaqt = (driver.sms_code_sent_date.minute * 60) + driver.sms_code_sent_date.second
         hozr = (datetime.now().minute * 60) + datetime.now().second
-        if (hozr - yuborilgan_vaqt) >= 60:
+        if (hozr - yuborilgan_vaqt) >= 300:
             driver.confirmed = False
             driver.save()
             return Response({'detail': 'Sms code is not active, it can only be active for 1 minute!',
