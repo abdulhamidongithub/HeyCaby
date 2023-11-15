@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'testapp',
 ]
 
-ASGI_APPLICATION = "HeyCaby.asgi.application"   # asgi ni ishga tushrish
+ASGI_APPLICATION = "heycaby.asgi.application"   # asgi ni ishga tushrish
 
 CHANNEL_LAYERS = {
     'default': {
@@ -62,7 +62,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'HeyCaby.urls'
+ROOT_URLCONF = 'heycaby.urls'
 
 TEMPLATES = [
     {
@@ -80,7 +80,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'HeyCaby.wsgi.application'
+WSGI_APPLICATION = 'heycaby.wsgi.application'
 
 
 # Database

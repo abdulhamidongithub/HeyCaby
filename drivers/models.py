@@ -42,3 +42,13 @@ class Drivers(CustomUser):
 
     class Meta:
         verbose_name = "Drivers"
+
+
+class DriverLocation(models.Model):
+    driver = models.ForeignKey(Drivers, related_name='driver_location', on_delete=models.CASCADE)
+    longitude = models.CharField(max_length=255, blank=True, null=True)
+    latitude = models.CharField(max_length=255, blank=True, null=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.driver.first_name
