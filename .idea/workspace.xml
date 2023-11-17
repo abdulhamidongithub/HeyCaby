@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
+<<<<<<< HEAD
+    <list default="true" id="bb2a3432-e208-4312-87b6-d2fa13a5be5f" name="Changes" comment="">
+=======
     <list default="true" id="25d62662-89eb-4efe-813f-39ae61b54e6e" name="Changes" comment="">
+>>>>>>> 2712f7c91869a65b8a2ec726780a76379f2db7f7
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
