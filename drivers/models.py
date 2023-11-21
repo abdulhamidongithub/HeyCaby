@@ -23,6 +23,7 @@ class Drivers(CustomUser):
     password = None
     phone = models.CharField(max_length=15, unique=True)
     car_type = models.CharField(max_length=30)
+    car_color = models.CharField(max_length=50)
     car_number = models.CharField(max_length=10)
     sms_code = models.CharField(max_length=30)
     sms_code_sent_date = models.DateTimeField(null=True, blank=True)
@@ -48,6 +49,7 @@ class DriverLocation(models.Model):
     driver = models.ForeignKey(Drivers, related_name='driver_location', on_delete=models.CASCADE)
     longitude = models.CharField(max_length=255, blank=True, null=True)
     latitude = models.CharField(max_length=255, blank=True, null=True)
+    bearing = models.CharField(max_length=255, blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
