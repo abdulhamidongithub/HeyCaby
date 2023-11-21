@@ -142,6 +142,7 @@ class DriverLocationPost(APIView):
             if location:
                 location.longitude = serializer.validated_data['longitude']
                 location.latitude = serializer.validated_data['latitude']
+                location.bearing = serializer.validated_data['bearing']
                 location.date = datetime.now()
 
                 location.save()
