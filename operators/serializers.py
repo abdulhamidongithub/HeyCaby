@@ -19,8 +19,6 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = {
             'order_status': {'read_only': True},
-            'destination_long': {'read_only': True},
-            'destination_lat': {'read_only': True},
             'grading_point': {'read_only': True},
             'waiting_seconds': {'read_only': True},
             'client': {'read_only': True},
