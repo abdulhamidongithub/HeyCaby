@@ -5,17 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6836a278-a56b-4712-8576-640dcd5ff62b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/HeyCaby.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/HeyCaby.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/drivers/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/drivers/consumers.py" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/consumers.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/drivers/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/serializers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/drivers/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/drivers/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/operators/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/operators/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/operators/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/operators/serializers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/operators/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/operators/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/operators/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/operators/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,7 +32,7 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "D:/Hujjatlar_TATU/Loyihalar/HeyCaby"
+    "last_opened_file_path": "D:/Hujjatlar_TATU/Loyihalar/SocialBalance/ProjectSocialBalance"
   }
 }]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />

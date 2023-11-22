@@ -18,6 +18,15 @@ class DriversSerializer(serializers.ModelSerializer):
             'phone': {'read_only': True},
         }
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        category = data.get('category')
+        if category:
+            category = CarCategory.objects.filter(id=category).first()
+            category_serializer = CarCategorySerializer(category)
+            data['category'] = category_serializer.data
+        return data
+
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)
         instance.first_name = validated_data.get('first_name', instance.first_name)

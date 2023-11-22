@@ -16,43 +16,41 @@ class OrdersConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         token = self.scope.get("query_string").decode("utf-8")
         if token.startswith("token="):
-            token = token.replace("token=", "")    # tokenni o'zini ovolamiz
-            # Tokenni tekshirib ko'rish
+            token = token.replace("token=", "")
             try:
                 access_token = AccessToken(token)
                 user_id = access_token['user_id']
-                self.scope["user_id"] = user_id      # user id olindi
+                self.scope["user_id"] = user_id
             except Exception as e:
-                await self.close()      # Token sinab ko'rishda xatolik, ulanishni rad etish
+                await self.close()
 
         await self.accept()
         await self.channel_layer.group_add("order_group", self.channel_name)
-        await self.send_initial_order_list()    # 1-martta Connect bo'lganda hamma malumotlar chiqishi
+        await self.send_initial_order_list()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard("order_group", self.channel_name)   # Connectlarni tugatish uchun
+        await self.channel_layer.group_discard("order_group", self.channel_name)
 
     async def send_initial_order_list(self):
         user_id = self.scope['user_id']
         user = await self.get_user_by_id(user_id)
-        if user.role == "driver":   # ismlarni korish uchun faqat superadmin role ga ruhsat berish
-            order_list = await self.get_order_list()  # funksiya bo'yicha malumotlarni yuborish
+        if user.role == "driver":
+            order_list = await self.get_order_list()
             await self.send(text_data=json.dumps(order_list))
         else:
             await self.send(text_data=json.dumps({"message": "Sizga drivers ro'yxati ko'rish huquqi yo'q."}))
 
-    async def add_new_order(self, event):       # yangi malumot kelsa event qabul qiladi va shu yerdan yangi malumotlar yuboriladi
+    async def add_new_order(self, event):
         await self.send_initial_order_list()
 
-    # asinxron qilib olish async def ichida sync ishlatib bomidi shunichun
     @sync_to_async
-    def get_order_list(self):        # ko'p joyda fodalanish uchun umumiy finksiya
+    def get_order_list(self):
         order_objects = Order.objects.filter(order_status='active').all().order_by('-id')
         serializer = OrderCreateSerializer(order_objects, many=True)
         return serializer.data
 
     @sync_to_async
-    def get_user_by_id(self, user_id):      # user malumotlarini olib olish
+    def get_user_by_id(self, user_id):
         return Drivers.objects.filter(id=user_id).first()
 
 
@@ -63,43 +61,41 @@ class DriversLocationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         token = self.scope.get("query_string").decode("utf-8")
         if token.startswith("token="):
-            token = token.replace("token=", "")  # tokenni o'zini ovolamiz
-            # Tokenni tekshirib ko'rish
+            token = token.replace("token=", "")
             try:
                 access_token = AccessToken(token)
                 user_id = access_token['user_id']
-                self.scope["user_id"] = user_id  # user id olindi
+                self.scope["user_id"] = user_id
             except Exception as e:
-                await self.close()  # Token sinab ko'rishda xatolik, ulanishni rad etish
+                await self.close()
 
         await self.accept()
         await self.channel_layer.group_add("driver_location_group", self.channel_name)
-        await self.send_initial_driver_loc_list()  # 1-martta Connect bo'lganda hamma malumotlar chiqishi
+        await self.send_initial_driver_loc_list()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard("driver_location_group", self.channel_name)  # Connectlarni tugatish uchun
+        await self.channel_layer.group_discard("driver_location_group", self.channel_name)
 
     async def send_initial_driver_loc_list(self):
         user_id = self.scope['user_id']
         user = await self.get_user_by_id(user_id)
-        if user.role == "operator":  # ismlarni korish uchun faqat superadmin role ga ruhsat berish
-            drivers_list = await self.get_locations_list()  # funksiya bo'yicha malumotlarni yuborish
+        if user.role == "operator":
+            drivers_list = await self.get_locations_list()
             await self.send(text_data=json.dumps(drivers_list))
         else:
             await self.send(text_data=json.dumps({"message": "Sizga drivers location ro'yxati ko'rish huquqi yo'q."}))
 
-    async def add_new_driver_location(self, event):  # yangi malumot kelsa event qabul qiladi va shu yerdan yangi malumotlar yuboriladi
+    async def add_new_driver_location(self, event):
         await self.send_initial_driver_loc_list()
 
-    # asinxron qilib olish async def ichida sync ishlatib bomidi shunichun
     @sync_to_async
-    def get_locations_list(self):  # ko'p joyda fodalanish uchun umumiy finksiya
+    def get_locations_list(self):
         loc_objects = DriverLocation.objects.all().order_by('-id')
         serializer = DriverLocationSerializer(loc_objects, many=True)
         return serializer.data
 
     @sync_to_async
-    def get_user_by_id(self, user_id):  # user malumotlarini olib olish
+    def get_user_by_id(self, user_id):
         return Operators.objects.filter(id=user_id).first()
 
 
@@ -116,41 +112,39 @@ class DriverLocationConsumer(AsyncWebsocketConsumer):
             token = list_query[0].replace("token=", "")
             driver_id = list_query[1].replace("driver_id=", "")
             self.scope["driver_id"] = driver_id
-            # Tokenni tekshirib ko'rish
             try:
                 access_token = AccessToken(token)
                 user_id = access_token['user_id']
-                self.scope["user_id"] = user_id  # user id olindi
+                self.scope["user_id"] = user_id
             except Exception as e:
-                await self.close()  # Token sinab ko'rishda xatolik, ulanishni rad etish
+                await self.close()
 
         await self.accept()
         await self.channel_layer.group_add("driver_location_group", self.channel_name)
-        await self.send_initial_driver_loc_list()  # 1-martta Connect bo'lganda hamma malumotlar chiqishi
+        await self.send_initial_driver_loc_list()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard("driver_location_group", self.channel_name)  # Connectlarni tugatish uchun
+        await self.channel_layer.group_discard("driver_location_group", self.channel_name)
 
     async def send_initial_driver_loc_list(self):
         user_id = self.scope['user_id']
         user = await self.get_user_by_id(user_id)
-        if user.role == "operator":  # ismlarni korish uchun faqat superadmin role ga ruhsat berish
-            order_list = await self.get_locations_driver()  # funksiya bo'yicha malumotlarni yuborish
+        if user.role == "operator":
+            order_list = await self.get_locations_driver()
             await self.send(text_data=json.dumps(order_list))
         else:
             await self.send(text_data=json.dumps({"message": "Sizga drivers location ro'yxati ko'rish huquqi yo'q."}))
 
-    async def add_new_driver_location(self, event):  # yangi malumot kelsa event qabul qiladi va shu yerdan yangi malumotlar yuboriladi
+    async def add_new_driver_location(self, event):
         await self.send_initial_driver_loc_list()
 
-    # asinxron qilib olish async def ichida sync ishlatib bomidi shunichun
     @sync_to_async
-    def get_locations_driver(self):  # ko'p joyda fodalanish uchun umumiy finksiya
+    def get_locations_driver(self):
         driver_id = self.scope["driver_id"]
         loc_object = DriverLocation.objects.filter(driver__id=driver_id).first()
         serializer = DriverLocationSerializer(loc_object)
         return serializer.data
 
     @sync_to_async
-    def get_user_by_id(self, user_id):  # user malumotlarini olib olish
+    def get_user_by_id(self, user_id):
         return Operators.objects.filter(id=user_id).first()
