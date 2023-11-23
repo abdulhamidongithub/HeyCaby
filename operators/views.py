@@ -159,3 +159,39 @@ class OrderCreate(APIView):
         return Response({'detail': 'Error',
                          'success': False,
                          'data': serializer.errors}, status=400)
+
+
+class OrderDelete(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('order_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=True)])
+    def delete(self, request):
+        """
+        Order delete
+        """
+        operator_chack(request.user.role)
+        order = Order.objects.filter(id=request.query_params.get('order_id')).first()
+        if order:
+            order.delete()
+            return Response({'detail': 'Deleted', 'success': True}, status=202)
+        return Response({"detail": "Order not found"}, status=404)
+
+
+class DriverDelete(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('driver_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=True)])
+    def delete(self, request):
+        """
+        Order delete
+        """
+        operator_chack(request.user.role)
+        driver = Drivers.objects.filter(id=request.query_params.get('driver_id')).first()
+        if driver:
+            driver.delete()
+            return Response({'detail': 'Deleted', 'success': True}, status=202)
+        return Response({"detail": "Order not found"}, status=404)

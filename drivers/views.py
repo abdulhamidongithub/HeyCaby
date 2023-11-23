@@ -16,7 +16,7 @@ from drivers.serializers import DriversSerializer, DriverLocationSerializer
 from operators.models import Order
 from user.models import CustomUser
 from user.serializers import CustomTokenSerializer
-from user.views import generate_sms_code, driver_chack
+from user.views import generate_sms_code, driver_chack, operator_chack
 
 
 class DriverProfilView(APIView):
@@ -117,7 +117,7 @@ class DriverChackSmsCodeView(APIView):
         if (hozr - yuborilgan_vaqt) >= 300:
             driver.confirmed = False
             driver.save()
-            return Response({'detail': 'Sms code is not active, it can only be active for 1 minute!',
+            return Response({'detail': 'Sms code is not active, it can only be active for 5 minute!',
                              'success': False},
                             status=403)
         return Response({'detail': 'Sms code is correct!',
@@ -270,7 +270,6 @@ class DriverFinishedOrder(APIView):
                              }, status=201)
         return Response({'detail': 'Buyurtma Activ emas',
                          'success': False}, status=400)
-
 
 
 

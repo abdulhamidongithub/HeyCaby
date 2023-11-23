@@ -10,4 +10,6 @@ urlpatterns = [
     path('orders_get/', OrdersView.as_view()),
     path('operator_get/', OperatorGet.as_view(), name='operator_get'),
     path('drivers_get_operator/', DriversGetOperator.as_view(), name='operator_get'),
+    path('order_delete/', OrderDelete.as_view()),
+    path('driver_delete/', DriverDelete.as_view()),
 ]
