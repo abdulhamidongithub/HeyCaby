@@ -12,4 +12,5 @@ urlpatterns = [
     path('drivers_get_operator/', DriversGetOperator.as_view(), name='operator_get'),
     path('order_delete/', OrderDelete.as_view()),
     path('driver_delete/', DriverDelete.as_view()),
+    path('driver_update/', DriverUpdateView.as_view()),
 ]
