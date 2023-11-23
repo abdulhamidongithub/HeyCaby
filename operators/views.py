@@ -2,6 +2,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -126,6 +127,8 @@ class OperatorDriverDetailView(APIView):
         driver_id = request.query_params.get('driver_id')
 
         driver = Drivers.objects.filter(id=driver_id).first()
+        if driver is None:
+            return Response({"error": "Driver not found"}, status=status.HTTP_404_NOT_FOUND)
         serializer = DriversSerializer(driver)
         return Response({'detail': 'Success', 'data': serializer.data}, status=200)
 
@@ -187,7 +190,7 @@ class DriverDelete(APIView):
         openapi.Parameter('driver_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=True)])
     def delete(self, request):
         """
-        Order delete
+        Driver delete
         """
         operator_chack(request.user.role)
         driver = Drivers.objects.filter(id=request.query_params.get('driver_id')).first()
@@ -195,3 +198,30 @@ class DriverDelete(APIView):
             driver.delete()
             return Response({'detail': 'Deleted', 'success': True}, status=202)
         return Response({"detail": "Order not found"}, status=404)
+
+
+class DriverUpdateView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        request_body=DriversSerializer,
+        manual_parameters=[
+        openapi.Parameter('driver_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=True)])
+    def put(self, request):
+        """
+        Driver update
+        """
+        operator_chack(request.user.role)
+
+        try:
+            driver = Drivers.objects.get(id=request.query_params.get('driver_id'))
+        except Drivers.DoesNotExist:
+            return Response({"error": "Driver not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = DriversSerializer(driver, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

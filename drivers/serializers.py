@@ -32,7 +32,7 @@ class DriversSerializer(serializers.ModelSerializer):
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.car_type = validated_data.get('car_type', instance.car_type)
-        instance.car_type = validated_data.get('car_color', instance.car_type)
+        instance.car_color = validated_data.get('car_color', instance.car_type)
         instance.car_number = validated_data.get('car_number', instance.car_number)
         instance.gender = validated_data.get('gender', instance.gender)
         instance.has_baggage = validated_data.get('has_baggage', instance.has_baggage)
