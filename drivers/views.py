@@ -117,7 +117,7 @@ class DriverChackSmsCodeView(APIView):
         if (hozr - yuborilgan_vaqt) >= 300:
             driver.confirmed = False
             driver.save()
-            return Response({'detail': 'Sms code is not active, it can only be active for 1 minute!',
+            return Response({'detail': 'Sms code is not active, it can only be active for 5 minute!',
                              'success': False},
                             status=403)
         return Response({'detail': 'Sms code is correct!',
