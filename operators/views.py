@@ -195,4 +195,3 @@ class DriverDelete(APIView):
             driver.delete()
             return Response({'detail': 'Deleted', 'success': True}, status=202)
         return Response({"detail": "Order not found"}, status=404)
-
