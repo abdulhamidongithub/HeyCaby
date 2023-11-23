@@ -16,7 +16,7 @@ from drivers.serializers import DriversSerializer, DriverLocationSerializer
 from operators.models import Order
 from user.models import CustomUser
 from user.serializers import CustomTokenSerializer
-from user.views import generate_sms_code, driver_chack
+from user.views import generate_sms_code, driver_chack, operator_chack
 
 
 class DriverProfilView(APIView):
@@ -142,6 +142,7 @@ class DriverLocationPost(APIView):
             if location:
                 location.longitude = serializer.validated_data['longitude']
                 location.latitude = serializer.validated_data['latitude']
+                location.bearing = serializer.validated_data['bearing']
                 location.date = datetime.now()
 
                 location.save()
@@ -269,7 +270,6 @@ class DriverFinishedOrder(APIView):
                              }, status=201)
         return Response({'detail': 'Buyurtma Activ emas',
                          'success': False}, status=400)
-
 
 
 
