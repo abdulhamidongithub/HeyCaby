@@ -174,7 +174,7 @@ class DriverLocationPost(APIView):
                          'data': serializer.errors}, status=400)
 
 
-class DriverAccaptOrder(APIView):
+class DriverAcceptOrder(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -270,6 +270,43 @@ class DriverFinishedOrder(APIView):
                              }, status=201)
         return Response({'detail': 'Buyurtma Activ emas',
                          'success': False}, status=400)
+
+
+class DriverCancelOrder(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('order_id', openapi.IN_QUERY, type=openapi.TYPE_STRING, required=True,
+                          description='order_id = Buyurtmani id si')])
+    def put(self, request):
+        driver_chack(request.user.role)
+
+        order_id = request.query_params.get('order_id')
+        driver = Drivers.objects.filter(id=request.user.id).first()
+
+        order = Order.objects.filter(id=order_id).first()
+        if order.order_status == 'accept' and order.driver.id == request.user.id:
+            order.driver = driver
+            order.order_status = 'active'
+            order.save()
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "order_group",
+                # WebSocket guruhi nomi (shu bo'yicha consumersdan qaysi websocketga jo'natish ajratib olinadi)
+                {
+                    "type": "add_new_order",
+                    # wensocket tomindagi yangi malumot kelganini qabul qilib oladigan funksiya
+                },
+            )
+            return Response({'success': True,
+                             'first_name': order.driver.first_name,
+                             'order_status': order.order_status,
+                             'phone': order.driver.phone,
+                             }, status=201)
+        return Response({'detail': 'Buyurtma mavjud emas yoki bu Driverga ulanmagan',
+                         'success': False}, status=400)
+
 
 
 
