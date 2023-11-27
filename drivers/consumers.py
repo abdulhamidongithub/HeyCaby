@@ -24,7 +24,7 @@ def calculate_distance(lat1, lon1, lat2, lon2):
 
 
 class OrdersConsumer(AsyncWebsocketConsumer):
-    connected_order_consumers = set()
+    # connected_order_consumers = set()
 
     async def connect(self):
         token = self.scope.get("query_string").decode("utf-8")
@@ -38,12 +38,12 @@ class OrdersConsumer(AsyncWebsocketConsumer):
                 await self.close()
 
         await self.accept()
-        OrdersConsumer.connected_order_consumers.add(self)
+        # OrdersConsumer.connected_order_consumers.add(self)
         await self.channel_layer.group_add("order_group", self.channel_name)
         await self.send_initial_order_list()
 
     async def disconnect(self, close_code):
-        OrdersConsumer.connected_order_consumers.remove(self)
+        # OrdersConsumer.connected_order_consumers.remove(self)
         await self.channel_layer.group_discard("order_group", self.channel_name)
 
     async def send_initial_order_list(self):
