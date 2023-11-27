@@ -10,7 +10,7 @@ class DriversSerializer(serializers.ModelSerializer):
     class Meta:
         model = Drivers
         fields = ('id', 'username', 'first_name', 'last_name', 'role', 'phone', 'car_type', 'car_color',
-                  'car_number', 'gender', 'balance', 'has_baggage', 'category')
+                  'car_number', 'gender', 'balance', 'has_baggage', 'is_busy', 'category')
         extra_kwargs = {
             'id': {'read_only': True},
             'role': {'read_only': True},
@@ -48,6 +48,14 @@ class DriverLocationSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'driver': {'read_only': True},
         }
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        driver = data.get('driver')
+        driver = Drivers.objects.filter(id=driver).first()
+        driver_ser = DriversSerializer(driver)
+        data['driver'] = driver_ser.data
+        return data
 
 
 class CarCategorySerializer(serializers.ModelSerializer):

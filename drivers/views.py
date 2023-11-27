@@ -180,6 +180,10 @@ class DriverAcceptOrder(APIView):
                     # wensocket tomindagi yangi malumot kelganini qabul qilib oladigan funksiya
                 },
             )
+
+            driver.is_busy = True
+            driver.save()
+
             return Response({'success': True,
                              'first_name': order.driver.first_name,
                              'order_status': order.order_status,
@@ -234,14 +238,19 @@ class DriverFinishedOrder(APIView):
         driver_chack(request.user.role)
 
         order_id = request.query_params.get('order_id')
+        driver = Drivers.objects.filter(id=request.user.id).first()
 
         order = Order.objects.filter(id=order_id).first()
-        if order.order_status == 'started' and order.driver.id == request.user.id:
+        if order.order_status == 'started' and order.driver.id == driver.id:
             order.order_status = 'finished'
             order.destination_lat = request.query_params.get('destination_lat')
             order.destination_long = request.query_params.get('destination_long')
             order.total_sum = request.query_params.get('total_sum')
             order.save()
+
+            driver.is_busy = False
+            driver.save()
+
             return Response({'success': True,
                              'first_name': order.driver.first_name,
                              'order_status': order.order_status,
@@ -278,6 +287,10 @@ class DriverCancelOrder(APIView):
                     # wensocket tomindagi yangi malumot kelganini qabul qilib oladigan funksiya
                 },
             )
+
+            driver.is_busy = False
+            driver.save()
+
             return Response({'success': True,
                              'first_name': order.driver.first_name,
                              'order_status': order.order_status,
