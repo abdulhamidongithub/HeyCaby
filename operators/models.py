@@ -19,6 +19,7 @@ class Order(models.Model):
     for_women = models.BooleanField(default=False)
     is_comfort = models.BooleanField(default=False)
     client_phone = models.CharField(max_length=50)
+    description = models.CharField(max_length=255)
     name_startin_place = models.CharField(max_length=255, blank=True, null=True)
     starting_point_long = models.CharField(max_length=50)
     starting_point_lat = models.CharField(max_length=50)

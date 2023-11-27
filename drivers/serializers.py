@@ -58,3 +58,8 @@ class CarCategorySerializer(serializers.ModelSerializer):
             'baggage_cost': {'read_only': True},
         }
 
+
+class CarCategoryForOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CarCategory
+        fields = ('id', 'type', 'sum_for_per_km', 'waiting_cost')
