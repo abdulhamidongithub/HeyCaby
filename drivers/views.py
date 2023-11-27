@@ -165,6 +165,9 @@ class DriverAcceptOrder(APIView):
 
         order_id = request.query_params.get('order_id')
         driver = Drivers.objects.filter(id=request.user.id).first()
+        if driver.is_busy:
+            return Response({'detail': 'Driverda tugatilmagan buyurtma bor',
+                             'success': False}, status=400)
 
         order = Order.objects.filter(id=order_id).first()
         if order.order_status == 'active':
@@ -298,7 +301,3 @@ class DriverCancelOrder(APIView):
                              }, status=201)
         return Response({'detail': 'Buyurtma mavjud emas yoki bu Driverga ulanmagan',
                          'success': False}, status=400)
-
-
-
-
