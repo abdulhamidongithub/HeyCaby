@@ -30,27 +30,6 @@ class DriverProfilView(APIView):
         serializer = DriversSerializer(drivers)
         return Response({'detail': 'Success', 'data': serializer.data}, status=200)
 
-    # @swagger_auto_schema(request_body=DriversSerializer)
-    # def put(self, request):
-    #
-    #     drivers = Drivers.objects.filter(id=request.user.id).first()
-    #     if drivers:
-    #         serializer = DriversSerializer(instance=drivers, data=request.data, partial=True)
-    #         print(serializer.is_valid())
-    #         if serializer.is_valid():
-    #             # drivers.username = serializer.validated_data['username']
-    #             # drivers.first_name = serializer.validated_data['first_name']
-    #             # drivers.last_name = serializer.validated_data['last_name']
-    #             # drivers.car_type = serializer.validated_data['car_type']
-    #             # drivers.car_number = serializer.validated_data['car_number']
-    #             # drivers.gender = serializer.validated_data['gender']
-    #             # drivers.has_baggage = serializer.validated_data['has_baggage']
-    #             # drivers.category = serializer.validated_data['category']
-    #             serializer.save()
-    #             return Response(serializer.data, status=status.HTTP_200_OK)
-    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    #     return Response({"error": "Driver not found"}, status=status.HTTP_404_NOT_FOUND)
-
 
 class DriverLoginView(APIView):
     @swagger_auto_schema(manual_parameters=[

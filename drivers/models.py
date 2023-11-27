@@ -6,9 +6,10 @@ from user.models import CustomUser
 class CarCategory(models.Model):
     type = models.CharField(max_length=100)
     minimum = models.PositiveIntegerField()
-    waiting_cost = models.PositiveIntegerField()
+    waiting_cost = models.PositiveIntegerField(default=0)
     bonus_percent = models.PositiveIntegerField()
     baggage_cost = models.PositiveIntegerField()
+    for_woman_cost = models.PositiveIntegerField()
     sum_for_per_km = models.PositiveIntegerField(default=1500)
 
     def __str__(self):
@@ -31,6 +32,7 @@ class Drivers(CustomUser):
     gender = models.CharField(max_length=15)
     balance = models.PositiveIntegerField(default=0)
     has_baggage = models.BooleanField(default=False)
+    is_busy = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     category = models.ForeignKey(
         CarCategory,
