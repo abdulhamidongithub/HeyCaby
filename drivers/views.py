@@ -150,7 +150,7 @@ class DriverLocationPost(APIView):
                              'data': serializer.data}, status=201)
         return Response({'detail': 'Error',
                          'success': False,
-                         'data': serializer.errors}, status=400)
+                         'data': serializer.errors})
 
 
 class DriverAcceptOrder(APIView):
@@ -167,9 +167,12 @@ class DriverAcceptOrder(APIView):
         driver = Drivers.objects.filter(id=request.user.id).first()
         if driver.is_busy:
             return Response({'detail': 'Driverda tugatilmagan buyurtma bor',
-                             'success': False}, status=400)
+                             'success': False})
 
         order = Order.objects.filter(id=order_id).first()
+        if order is None:
+            return Response({'detail': 'Order not found',
+                             'success': False})
         if order.order_status == 'active':
             order.driver = driver
             order.order_status = 'accept'
@@ -193,7 +196,7 @@ class DriverAcceptOrder(APIView):
                              'phone': order.driver.phone,
                              }, status=201)
         return Response({'detail': 'Buyurtma Activ emas',
-                         'success': False}, status=400)
+                         'success': False})
 
 
 class DriverStartOrder(APIView):
@@ -210,6 +213,10 @@ class DriverStartOrder(APIView):
         driver = Drivers.objects.filter(id=request.user.id).first()
 
         order = Order.objects.filter(id=order_id).first()
+        if not order:
+            return Response({'detail': 'Order not found',
+                             'success': False})
+
         if order.order_status == 'accept' and order.driver.id == request.user.id:
             order.driver = driver
             order.order_status = 'started'
@@ -220,7 +227,7 @@ class DriverStartOrder(APIView):
                              'phone': order.driver.phone,
                              }, status=201)
         return Response({'detail': 'Buyurtma mavjud emas',
-                         'success': False}, status=400)
+                         'success': False})
 
 
 class DriverFinishedOrder(APIView):
@@ -244,6 +251,10 @@ class DriverFinishedOrder(APIView):
         driver = Drivers.objects.filter(id=request.user.id).first()
 
         order = Order.objects.filter(id=order_id).first()
+        if not order:
+            return Response({'detail': 'Order not found',
+                             'success': False})
+
         if order.order_status == 'started' and order.driver.id == driver.id:
             order.order_status = 'finished'
             order.destination_lat = request.query_params.get('destination_lat')
@@ -260,7 +271,7 @@ class DriverFinishedOrder(APIView):
                              'phone': order.driver.phone,
                              }, status=201)
         return Response({'detail': 'Buyurtma Activ emas',
-                         'success': False}, status=400)
+                         'success': False})
 
 
 class DriverCancelOrder(APIView):
@@ -277,6 +288,10 @@ class DriverCancelOrder(APIView):
         driver = Drivers.objects.filter(id=request.user.id).first()
 
         order = Order.objects.filter(id=order_id).first()
+        if not order:
+            return Response({'detail': 'Order not found',
+                             'success': False})
+
         if order.order_status == 'accept' and order.driver.id == request.user.id:
             order.driver = driver
             order.order_status = 'active'
@@ -300,4 +315,4 @@ class DriverCancelOrder(APIView):
                              'phone': order.driver.phone,
                              }, status=201)
         return Response({'detail': 'Buyurtma mavjud emas yoki bu Driverga ulanmagan',
-                         'success': False}, status=400)
+                         'success': False})
