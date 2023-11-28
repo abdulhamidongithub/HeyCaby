@@ -175,6 +175,17 @@ class OrderDelete(APIView):
         order = Order.objects.filter(id=request.query_params.get('order_id')).first()
         if order:
             order.delete()
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "order_group",
+                # WebSocket guruhi nomi (shu bo'yicha consumersdan qaysi websocketga jo'natish ajratib olinadi)
+                {
+                    "type": "add_new_order",
+                    # wensocket tomindagi yangi malumot kelganini qabul qilib oladigan funksiya
+                },
+            )
+
             return Response({'detail': 'Deleted', 'success': True}, status=202)
         return Response({"detail": "Order not found"}, status=404)
 

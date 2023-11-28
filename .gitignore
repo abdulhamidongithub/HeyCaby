@@ -1,3 +1,10 @@
-heycaby/.env
-heycaby/.idea
-heycaby/venv
+# Python cache
+__pycache__/
+
+# Virtual Environment
+venv/
+
+# IDE specific files
+.idea/
+
+heycaby/.env/
