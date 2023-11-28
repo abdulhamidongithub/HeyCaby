@@ -24,7 +24,6 @@ def calculate_distance(lat1, lon1, lat2, lon2):
 
 
 class OrdersConsumer(AsyncWebsocketConsumer):
-    # connected_order_consumers = set()
 
     async def connect(self):
         token = self.scope.get("query_string").decode("utf-8")
@@ -38,58 +37,64 @@ class OrdersConsumer(AsyncWebsocketConsumer):
                 await self.close()
 
         await self.accept()
-        # OrdersConsumer.connected_order_consumers.add(self)
         await self.channel_layer.group_add("order_group", self.channel_name)
         await self.send_initial_order_list()
 
     async def disconnect(self, close_code):
-        # OrdersConsumer.connected_order_consumers.remove(self)
         await self.channel_layer.group_discard("order_group", self.channel_name)
 
     async def send_initial_order_list(self):
         user_id = self.scope['user_id']
         user = await self.get_user_by_id(user_id)
-        category_id = await self.get_user_category_id(user_id)
-        location = await self.get_driver_location(user_id)
-        if user.role == "driver":
-            order_list = await self.get_order_list(category_id, location)
+        driver = user['driver']
+        if driver.role == "driver":
+            order_list = await self.get_order_list(user)
             await self.send(text_data=json.dumps(order_list))
         else:
             await self.send(text_data=json.dumps({"message": "Sizga drivers ro'yxati ko'rish huquqi yo'q."}))
 
     async def add_new_order(self, event):
-        await self.send_initial_order_list()
+        order = event['order']
+        user_id = self.scope['user_id']
+        user = await self.get_user_by_id(user_id)
+        if order['is_comfort'] and user['category_id'].id == 2:
+            if calculate_distance(
+                    float(user['location'].latitude), float(user['location'].longitude),
+                    float(order['starting_point_lat']), float(order['starting_point_long'])) <= 3:
+                await self.send_initial_order_list()
+        else:
+            if calculate_distance(
+                    float(user['location'].latitude), float(user['location'].longitude),
+                    float(order['starting_point_lat']), float(order['starting_point_long'])) <= 3:
+                await self.send_initial_order_list()
 
     @sync_to_async
-    def get_order_list(self, category_id, location):
-        orders = []
-        if category_id == 2:
+    def get_order_list(self, user):
+        if user['category_id'] == 2:
             order_objects = Order.objects.filter(order_status='active').all().order_by('-id')
-            serializer = OrderCreateSerializer(order_objects, many=True)
         else:
             order_objects = Order.objects.filter(order_status='active', is_comfort=False).all().order_by('-id')
-            serializer = OrderCreateSerializer(order_objects, many=True)
-        for order in serializer.data:
+        serializer = OrderCreateSerializer(order_objects, many=True)
 
-            if calculate_distance(float(location.latitude), float(location.longitude),
-                                  float(order['starting_point_lat']), float(order['starting_point_long'])) <= 3:
-                orders.append(order)
-        return orders
+        filtered_orders = [
+            order for order in serializer.data
+            if calculate_distance(
+                float(user['location'].latitude),
+                float(user['location'].longitude),
+                float(order['starting_point_lat']),
+                float(order['starting_point_long'])
+            ) <= 3
+        ]
+
+        return filtered_orders
 
     @sync_to_async
     def get_user_by_id(self, user_id):
         driver = Drivers.objects.filter(id=user_id).first()
-        return driver
-
-    @sync_to_async
-    def get_user_category_id(self, user_id):
-        driver = Drivers.objects.filter(id=user_id).first()
-        return driver.category.id
-
-    @sync_to_async
-    def get_driver_location(self, user_id):
-        location = DriverLocation.objects.filter(driver__id=user_id).first()
-        return location
+        location = driver.driver_location.first()
+        category_id = driver.category
+        data = {"driver": driver, "location": location, "category_id": category_id}
+        return data
 
 
 class DriversLocationConsumer(AsyncWebsocketConsumer):
@@ -131,58 +136,6 @@ class DriversLocationConsumer(AsyncWebsocketConsumer):
     def get_locations_list(self):
         loc_objects = DriverLocation.objects.all().order_by('-id')
         serializer = DriverLocationSerializer(loc_objects, many=True)
-        return serializer.data
-
-    @sync_to_async
-    def get_user_by_id(self, user_id):
-        return Operators.objects.filter(id=user_id).first()
-
-
-class DriverLocationConsumer(AsyncWebsocketConsumer):
-    """
-    Operator uchun bita driver, token=operator token, driver_id = driver_id
-    """
-
-    async def connect(self):
-        query = self.scope.get("query_string").decode("utf-8")
-        if query.startswith("token="):
-            list_query = query.split("&")
-            if len(list_query) < 2:
-                await self.send(text_data=json.dumps({"message": "operator token va driver id kirtilishi shart"}))
-            token = list_query[0].replace("token=", "")
-            driver_id = list_query[1].replace("driver_id=", "")
-            self.scope["driver_id"] = driver_id
-            try:
-                access_token = AccessToken(token)
-                user_id = access_token['user_id']
-                self.scope["user_id"] = user_id
-            except Exception as e:
-                await self.close()
-
-        await self.accept()
-        await self.channel_layer.group_add("driver_location_group", self.channel_name)
-        await self.send_initial_driver_loc_list()
-
-    async def disconnect(self, close_code):
-        await self.channel_layer.group_discard("driver_location_group", self.channel_name)
-
-    async def send_initial_driver_loc_list(self):
-        user_id = self.scope['user_id']
-        user = await self.get_user_by_id(user_id)
-        if user.role == "operator":
-            order_list = await self.get_locations_driver()
-            await self.send(text_data=json.dumps(order_list))
-        else:
-            await self.send(text_data=json.dumps({"message": "Sizga drivers location ro'yxati ko'rish huquqi yo'q."}))
-
-    async def add_new_driver_location(self, event):
-        await self.send_initial_driver_loc_list()
-
-    @sync_to_async
-    def get_locations_driver(self):
-        driver_id = self.scope["driver_id"]
-        loc_object = DriverLocation.objects.filter(driver__id=driver_id).first()
-        serializer = DriverLocationSerializer(loc_object)
         return serializer.data
 
     @sync_to_async
