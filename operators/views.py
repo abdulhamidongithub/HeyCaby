@@ -152,6 +152,7 @@ class OrderCreate(APIView):
                 # WebSocket guruhi nomi (shu bo'yicha consumersdan qaysi websocketga jo'natish ajratib olinadi)
                 {
                     "type": "add_new_order",
+                    "order": serializer.data
                     # wensocket tomindagi yangi malumot kelganini qabul qilib oladigan funksiya
                 },
             )

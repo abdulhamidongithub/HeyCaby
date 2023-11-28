@@ -14,6 +14,7 @@ from heycaby.eskiz import SendSmsApiWithEskiz
 from drivers.models import Drivers, DriverLocation
 from drivers.serializers import DriversSerializer, DriverLocationSerializer
 from operators.models import Order
+from operators.serializers import OrderCreateSerializer
 from user.models import CustomUser
 from user.serializers import CustomTokenSerializer
 from user.views import generate_sms_code, driver_chack, operator_chack
@@ -178,11 +179,13 @@ class DriverAcceptOrder(APIView):
             order.order_status = 'accept'
             order.save()
             channel_layer = get_channel_layer()
+            serializer = OrderCreateSerializer(order)
             async_to_sync(channel_layer.group_send)(
                 "order_group",
                 # WebSocket guruhi nomi (shu bo'yicha consumersdan qaysi websocketga jo'natish ajratib olinadi)
                 {
                     "type": "add_new_order",
+                    "order": serializer.data
                     # wensocket tomindagi yangi malumot kelganini qabul qilib oladigan funksiya
                 },
             )
@@ -296,12 +299,14 @@ class DriverCancelOrder(APIView):
             order.driver = driver
             order.order_status = 'active'
             order.save()
+            serializer = OrderCreateSerializer(order)
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 "order_group",
                 # WebSocket guruhi nomi (shu bo'yicha consumersdan qaysi websocketga jo'natish ajratib olinadi)
                 {
                     "type": "add_new_order",
+                    "order": serializer.data
                     # wensocket tomindagi yangi malumot kelganini qabul qilib oladigan funksiya
                 },
             )
