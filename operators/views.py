@@ -178,11 +178,13 @@ class OrderDelete(APIView):
         if order:
             order.delete()
             channel_layer = get_channel_layer()
+            serializer = OrderCreateSerializer(order)
             async_to_sync(channel_layer.group_send)(
                 "order_group",
                 # WebSocket guruhi nomi (shu bo'yicha consumersdan qaysi websocketga jo'natish ajratib olinadi)
                 {
                     "type": "add_new_order",
+                    "order": serializer.data
                     # wensocket tomindagi yangi malumot kelganini qabul qilib oladigan funksiya
                 },
             )
