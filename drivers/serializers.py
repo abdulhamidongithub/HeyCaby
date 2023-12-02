@@ -13,7 +13,7 @@ class DriversSerializer(serializers.ModelSerializer):
                   'car_number', 'gender', 'balance', 'has_baggage', 'is_busy', 'category')
         extra_kwargs = {
             'id': {'read_only': True},
-            'role': {'read_only': True},
+            ' ': {'read_only': True},
             'balance': {'read_only': True},
             'phone': {'read_only': True},
         }
@@ -36,6 +36,7 @@ class DriversSerializer(serializers.ModelSerializer):
         instance.car_number = validated_data.get('car_number', instance.car_number)
         instance.gender = validated_data.get('gender', instance.gender)
         instance.has_baggage = validated_data.get('has_baggage', instance.has_baggage)
+        instance.is_busy = validated_data.get('is_busy', instance.is_busy)
         instance.category = validated_data.get('category', instance.category)
         instance.save()
         return instance

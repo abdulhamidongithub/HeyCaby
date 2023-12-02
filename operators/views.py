@@ -229,7 +229,7 @@ class DriverUpdateView(APIView):
         except Drivers.DoesNotExist:
             return Response({"error": "Driver not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = DriversSerializer(driver, data=request.data)
+        serializer = DriversSerializer(driver, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
