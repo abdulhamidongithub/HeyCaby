@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+
+from drivers.serializers import CarCategoryForOrderSerializer
 from .models import *
 
 
@@ -23,8 +25,14 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             'waiting_seconds': {'read_only': True},
             'client': {'read_only': True},
             'driver': {'read_only': True},
-            'total_sum': {'read_only': True},
         }
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        category = CarCategory.objects.all()
+        category_serializer = CarCategoryForOrderSerializer(category, many=True)
+        data['costs'] = category_serializer.data
+        return data
 
 
 class OrderGetSerializer(serializers.ModelSerializer):

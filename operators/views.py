@@ -2,6 +2,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -48,11 +49,9 @@ class DriverCreateView(APIView):
             username = serializer.validated_data['username']
 
             serializer.save(phone=username, role="driver")
-            return Response({'detail': 'Created, sms code has been sent!',
-                             'success': True,
+            return Response({'success': True,
                              'data': serializer.data}, status=201)
-        return Response({'detail': 'Error',
-                         'success': False,
+        return Response({'success': False,
                          'data': serializer.errors}, status=400)
 
 
@@ -126,6 +125,8 @@ class OperatorDriverDetailView(APIView):
         driver_id = request.query_params.get('driver_id')
 
         driver = Drivers.objects.filter(id=driver_id).first()
+        if driver is None:
+            return Response({"error": "Driver not found"}, status=status.HTTP_404_NOT_FOUND)
         serializer = DriversSerializer(driver)
         return Response({'detail': 'Success', 'data': serializer.data}, status=200)
 
@@ -151,6 +152,7 @@ class OrderCreate(APIView):
                 # WebSocket guruhi nomi (shu bo'yicha consumersdan qaysi websocketga jo'natish ajratib olinadi)
                 {
                     "type": "add_new_order",
+                    "order": serializer.data
                     # wensocket tomindagi yangi malumot kelganini qabul qilib oladigan funksiya
                 },
             )
@@ -175,7 +177,6 @@ class OrderDelete(APIView):
         order = Order.objects.filter(id=request.query_params.get('order_id')).first()
         if order:
             order.delete()
-
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 "order_group",
@@ -185,7 +186,6 @@ class OrderDelete(APIView):
                     # wensocket tomindagi yangi malumot kelganini qabul qilib oladigan funksiya
                 },
             )
-
             return Response({'detail': 'Deleted', 'success': True}, status=202)
         return Response({"detail": "Order not found"}, status=404)
 
@@ -198,7 +198,7 @@ class DriverDelete(APIView):
         openapi.Parameter('driver_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=True)])
     def delete(self, request):
         """
-        Order delete
+        Driver delete
         """
         operator_chack(request.user.role)
         driver = Drivers.objects.filter(id=request.query_params.get('driver_id')).first()
@@ -206,3 +206,30 @@ class DriverDelete(APIView):
             driver.delete()
             return Response({'detail': 'Deleted', 'success': True}, status=202)
         return Response({"detail": "Order not found"}, status=404)
+
+
+class DriverUpdateView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        request_body=DriversSerializer,
+        manual_parameters=[
+        openapi.Parameter('driver_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=True)])
+    def put(self, request):
+        """
+        Driver update
+        """
+        operator_chack(request.user.role)
+
+        try:
+            driver = Drivers.objects.get(id=request.query_params.get('driver_id'))
+        except Drivers.DoesNotExist:
+            return Response({"error": "Driver not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = DriversSerializer(driver, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

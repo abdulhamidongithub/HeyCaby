@@ -10,10 +10,10 @@ class DriversSerializer(serializers.ModelSerializer):
     class Meta:
         model = Drivers
         fields = ('id', 'username', 'first_name', 'last_name', 'role', 'phone', 'car_type', 'car_color',
-                  'car_number', 'gender', 'balance', 'has_baggage', 'category')
+                  'car_number', 'gender', 'balance', 'has_baggage', 'is_busy', 'category')
         extra_kwargs = {
             'id': {'read_only': True},
-            'role': {'read_only': True},
+            ' ': {'read_only': True},
             'balance': {'read_only': True},
             'phone': {'read_only': True},
         }
@@ -32,10 +32,11 @@ class DriversSerializer(serializers.ModelSerializer):
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.car_type = validated_data.get('car_type', instance.car_type)
-        instance.car_type = validated_data.get('car_color', instance.car_type)
+        instance.car_color = validated_data.get('car_color', instance.car_type)
         instance.car_number = validated_data.get('car_number', instance.car_number)
         instance.gender = validated_data.get('gender', instance.gender)
         instance.has_baggage = validated_data.get('has_baggage', instance.has_baggage)
+        instance.is_busy = validated_data.get('is_busy', instance.is_busy)
         instance.category = validated_data.get('category', instance.category)
         instance.save()
         return instance
@@ -49,6 +50,14 @@ class DriverLocationSerializer(serializers.ModelSerializer):
             'driver': {'read_only': True},
         }
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        driver = data.get('driver')
+        driver = Drivers.objects.filter(id=driver).first()
+        driver_ser = DriversSerializer(driver)
+        data['driver'] = driver_ser.data
+        return data
+
 
 class CarCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,3 +67,8 @@ class CarCategorySerializer(serializers.ModelSerializer):
             'baggage_cost': {'read_only': True},
         }
 
+
+class CarCategoryForOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CarCategory
+        fields = ('id', 'type', 'sum_for_per_km', 'waiting_cost')

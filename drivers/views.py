@@ -14,6 +14,7 @@ from heycaby.eskiz import SendSmsApiWithEskiz
 from drivers.models import Drivers, DriverLocation
 from drivers.serializers import DriversSerializer, DriverLocationSerializer
 from operators.models import Order
+from operators.serializers import OrderCreateSerializer
 from user.models import CustomUser
 from user.serializers import CustomTokenSerializer
 from user.views import generate_sms_code, driver_chack, operator_chack
@@ -29,27 +30,6 @@ class DriverProfilView(APIView):
         drivers = Drivers.objects.filter(id=request.user.id).first()
         serializer = DriversSerializer(drivers)
         return Response({'detail': 'Success', 'data': serializer.data}, status=200)
-
-    # @swagger_auto_schema(request_body=DriversSerializer)
-    # def put(self, request):
-    #
-    #     drivers = Drivers.objects.filter(id=request.user.id).first()
-    #     if drivers:
-    #         serializer = DriversSerializer(instance=drivers, data=request.data, partial=True)
-    #         print(serializer.is_valid())
-    #         if serializer.is_valid():
-    #             # drivers.username = serializer.validated_data['username']
-    #             # drivers.first_name = serializer.validated_data['first_name']
-    #             # drivers.last_name = serializer.validated_data['last_name']
-    #             # drivers.car_type = serializer.validated_data['car_type']
-    #             # drivers.car_number = serializer.validated_data['car_number']
-    #             # drivers.gender = serializer.validated_data['gender']
-    #             # drivers.has_baggage = serializer.validated_data['has_baggage']
-    #             # drivers.category = serializer.validated_data['category']
-    #             serializer.save()
-    #             return Response(serializer.data, status=status.HTTP_200_OK)
-    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    #     return Response({"error": "Driver not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class DriverLoginView(APIView):
@@ -171,10 +151,10 @@ class DriverLocationPost(APIView):
                              'data': serializer.data}, status=201)
         return Response({'detail': 'Error',
                          'success': False,
-                         'data': serializer.errors}, status=400)
+                         'data': serializer.errors})
 
 
-class DriverAccaptOrder(APIView):
+class DriverAcceptOrder(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -186,28 +166,40 @@ class DriverAccaptOrder(APIView):
 
         order_id = request.query_params.get('order_id')
         driver = Drivers.objects.filter(id=request.user.id).first()
+        if driver.is_busy:
+            return Response({'detail': 'Driverda tugatilmagan buyurtma bor',
+                             'success': False})
 
         order = Order.objects.filter(id=order_id).first()
+        if order is None:
+            return Response({'detail': 'Order not found',
+                             'success': False})
         if order.order_status == 'active':
             order.driver = driver
             order.order_status = 'accept'
             order.save()
             channel_layer = get_channel_layer()
+            serializer = OrderCreateSerializer(order)
             async_to_sync(channel_layer.group_send)(
                 "order_group",
                 # WebSocket guruhi nomi (shu bo'yicha consumersdan qaysi websocketga jo'natish ajratib olinadi)
                 {
                     "type": "add_new_order",
+                    "order": serializer.data
                     # wensocket tomindagi yangi malumot kelganini qabul qilib oladigan funksiya
                 },
             )
+
+            driver.is_busy = True
+            driver.save()
+
             return Response({'success': True,
                              'first_name': order.driver.first_name,
                              'order_status': order.order_status,
                              'phone': order.driver.phone,
                              }, status=201)
         return Response({'detail': 'Buyurtma Activ emas',
-                         'success': False}, status=400)
+                         'success': False})
 
 
 class DriverStartOrder(APIView):
@@ -224,6 +216,10 @@ class DriverStartOrder(APIView):
         driver = Drivers.objects.filter(id=request.user.id).first()
 
         order = Order.objects.filter(id=order_id).first()
+        if not order:
+            return Response({'detail': 'Order not found',
+                             'success': False})
+
         if order.order_status == 'accept' and order.driver.id == request.user.id:
             order.driver = driver
             order.order_status = 'started'
@@ -234,7 +230,7 @@ class DriverStartOrder(APIView):
                              'phone': order.driver.phone,
                              }, status=201)
         return Response({'detail': 'Buyurtma mavjud emas',
-                         'success': False}, status=400)
+                         'success': False})
 
 
 class DriverFinishedOrder(APIView):
@@ -255,21 +251,73 @@ class DriverFinishedOrder(APIView):
         driver_chack(request.user.role)
 
         order_id = request.query_params.get('order_id')
+        driver = Drivers.objects.filter(id=request.user.id).first()
 
         order = Order.objects.filter(id=order_id).first()
-        if order.order_status == 'started' and order.driver.id == request.user.id:
+        if not order:
+            return Response({'detail': 'Order not found',
+                             'success': False})
+
+        if order.order_status == 'started' and order.driver.id == driver.id:
             order.order_status = 'finished'
             order.destination_lat = request.query_params.get('destination_lat')
             order.destination_long = request.query_params.get('destination_long')
             order.total_sum = request.query_params.get('total_sum')
             order.save()
+
+            driver.is_busy = False
+            driver.save()
+
             return Response({'success': True,
                              'first_name': order.driver.first_name,
                              'order_status': order.order_status,
                              'phone': order.driver.phone,
                              }, status=201)
         return Response({'detail': 'Buyurtma Activ emas',
-                         'success': False}, status=400)
+                         'success': False})
 
 
+class DriverCancelOrder(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('order_id', openapi.IN_QUERY, type=openapi.TYPE_STRING, required=True,
+                          description='order_id = Buyurtmani id si')])
+    def put(self, request):
+        driver_chack(request.user.role)
+
+        order_id = request.query_params.get('order_id')
+        driver = Drivers.objects.filter(id=request.user.id).first()
+
+        order = Order.objects.filter(id=order_id).first()
+        if not order:
+            return Response({'detail': 'Order not found',
+                             'success': False})
+
+        if order.order_status == 'accept' and order.driver.id == request.user.id:
+            order.driver = driver
+            order.order_status = 'active'
+            order.save()
+            serializer = OrderCreateSerializer(order)
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "order_group",
+                # WebSocket guruhi nomi (shu bo'yicha consumersdan qaysi websocketga jo'natish ajratib olinadi)
+                {
+                    "type": "add_new_order",
+                    "order": serializer.data
+                    # wensocket tomindagi yangi malumot kelganini qabul qilib oladigan funksiya
+                },
+            )
+
+            driver.is_busy = False
+            driver.save()
+
+            return Response({'success': True,
+                             'first_name': order.driver.first_name,
+                             'order_status': order.order_status,
+                             'phone': order.driver.phone,
+                             }, status=201)
+        return Response({'detail': 'Buyurtma mavjud emas yoki bu Driverga ulanmagan',
+                         'success': False})
