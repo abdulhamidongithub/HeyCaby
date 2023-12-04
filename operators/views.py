@@ -11,7 +11,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from drivers.models import Drivers, CarCategory
 from drivers.serializers import DriversSerializer, CarCategorySerializer
 from operators.models import Operators, Order
-from operators.serializers import OperatorSerializer, OrderCreateSerializer, OrderGetSerializer
+from operators.serializers import OperatorSerializer, OrderCreateSerializer, OrderGetSerializer, \
+    OrderDriverGetSerializer
 from user.views import operator_chack
 
 
@@ -81,7 +82,12 @@ class OrdersView(APIView):
 
         status = request.query_params.get('status')
         if status:
-            orders = Order.objects.filter(order_status=status).all()
+            if status == "active":
+                orders = Order.objects.filter(order_status=status).all()
+            else:
+                orders = Order.objects.filter(order_status=status).all()
+                serializer = OrderDriverGetSerializer(orders, many=True)
+                return Response({'detail': 'Success', 'data': serializer.data}, status=200)
         else:
             orders = Order.objects.all()
         serializer = OrderGetSerializer(orders, many=True)
