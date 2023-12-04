@@ -40,16 +40,10 @@ class OrderGetSerializer(serializers.ModelSerializer):
         model = Order
         fields = '__all__'
 
-
-class OrderDriverGetSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Order
-        fields = '__all__'
-
     def to_representation(self, instance):
         data = super().to_representation(instance)
         driver = Drivers.objects.filter(id=data.get('driver')).first()
-        print(driver)
-        driver_ser = DriversSerializer(driver)
-        data['driver'] = driver_ser.data
+        if driver:
+            driver_ser = DriversSerializer(driver)
+            data['driver'] = driver_ser.data
         return data
