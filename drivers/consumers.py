@@ -57,35 +57,70 @@ class OrdersConsumer(AsyncWebsocketConsumer):
         order = event['order']
         user_id = self.scope['user_id']
         user = await self.get_user_by_id(user_id)
-        if calculate_distance(
-                float(user['location'].latitude), float(user['location'].longitude),
-                float(order['starting_point_lat']), float(order['starting_point_long'])) <= 3:
-            if order['for_women']:
-                if user['driver'].gender.lower() == "ayol":
+        if order['baggage']:
+            if user['driver'].has_baggage:
+                if calculate_distance(
+                        float(user['location'].latitude), float(user['location'].longitude),
+                        float(order['starting_point_lat']), float(order['starting_point_long'])) <= 3:
+                    if order['for_women']:
+                        if user['driver'].gender.lower() == "ayol":
+                            if order['is_comfort'] and user['category_id'].id == 2:
+                                await self.send_initial_order_list()
+                            elif not order['is_comfort']:
+                                await self.send_initial_order_list()
+                    else:
+                        if order['is_comfort'] and user['category_id'].id == 2:
+                            await self.send_initial_order_list()
+                        elif not order['is_comfort']:
+                            await self.send_initial_order_list()
+        else:
+            if calculate_distance(
+                    float(user['location'].latitude), float(user['location'].longitude),
+                    float(order['starting_point_lat']), float(order['starting_point_long'])) <= 3:
+                if order['for_women']:
+                    if user['driver'].gender.lower() == "ayol":
+                        if order['is_comfort'] and user['category_id'].id == 2:
+                            await self.send_initial_order_list()
+                        elif not order['is_comfort']:
+                            await self.send_initial_order_list()
+                else:
                     if order['is_comfort'] and user['category_id'].id == 2:
                         await self.send_initial_order_list()
                     elif not order['is_comfort']:
                         await self.send_initial_order_list()
-            else:
-                if order['is_comfort'] and user['category_id'].id == 2:
-                    await self.send_initial_order_list()
-                elif not order['is_comfort']:
-                    await self.send_initial_order_list()
 
     @sync_to_async
     def get_order_list(self, user):
-        if user['driver'].gender.lower() == "erkak":
-            if user['category_id'].id == 2:
-                order_objects = Order.objects.filter(for_women=False, order_status='active').all().order_by('-id')
+        if user['driver'].has_baggage:
+            if user['driver'].gender.lower() == "erkak":
+                if user['category_id'].id == 2:
+                    order_objects = Order.objects.filter(for_women=False,
+                                                         order_status='active').all().order_by('-id')
+                else:
+                    order_objects = Order.objects.filter(for_women=False,
+                                                         order_status='active',
+                                                         is_comfort=False).all().order_by('-id')
             else:
-                order_objects = Order.objects.filter(for_women=False, order_status='active',
-                                                     is_comfort=False).all().order_by('-id')
+                if user['category_id'].id == 2:
+                    order_objects = Order.objects.filter(order_status='active').all().order_by('-id')
+                else:
+                    order_objects = Order.objects.filter(order_status='active', is_comfort=False).all().order_by('-id')
         else:
-            if user['category_id'].id == 2:
-                order_objects = Order.objects.filter(order_status='active').all().order_by('-id')
+            if user['driver'].gender.lower() == "erkak":
+                if user['category_id'].id == 2:
+                    order_objects = Order.objects.filter(baggage=False, for_women=False,
+                                                         order_status='active').all().order_by('-id')
+                else:
+                    order_objects = Order.objects.filter(baggage=False, for_women=False,
+                                                         order_status='active',
+                                                         is_comfort=False).all().order_by('-id')
             else:
-                order_objects = Order.objects.filter(order_status='active',
-                                                     is_comfort=False).all().order_by('-id')
+                if user['category_id'].id == 2:
+                    order_objects = Order.objects.filter(baggage=False, order_status='active').all().order_by('-id')
+                else:
+                    order_objects = Order.objects.filter(baggage=False, order_status='active',
+                                                         is_comfort=False).all().order_by('-id')
+
         serializer = OrderCreateSerializer(order_objects, many=True)
 
         filtered_orders = [
