@@ -49,3 +49,14 @@ class Operators(CustomUser):
         verbose_name = "Operators"
 
 
+class DriverPayment(models.Model):
+    driver = models.ForeignKey(Drivers, related_name='driver_payments', on_delete=models.CASCADE)
+    amount = models.FloatField()
+    status = models.CharField(max_length=50, choices=[('otkazildi', 'otkazildi'), ('yechib_olindi', 'yechib_olindi')],
+                              blank=True, null=True)
+    datetime = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.driver.first_name
+
+
