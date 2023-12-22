@@ -47,3 +47,23 @@ class OrderGetSerializer(serializers.ModelSerializer):
             driver_ser = DriversSerializer(driver)
             data['driver'] = driver_ser.data
         return data
+
+
+class DriverPaymentPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DriverPayment
+        fields = ('driver', 'amount')
+
+
+class DriverPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DriverPayment
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        driver = Drivers.objects.filter(id=data.get('driver')).first()
+        if driver:
+            driver_ser = DriversSerializer(driver)
+            data['driver'] = driver_ser.data
+        return data

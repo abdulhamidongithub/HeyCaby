@@ -10,8 +10,9 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from drivers.models import Drivers, CarCategory
 from drivers.serializers import DriversSerializer, CarCategorySerializer
-from operators.models import Operators, Order
-from operators.serializers import OperatorSerializer, OrderCreateSerializer, OrderGetSerializer
+from operators.models import Operators, Order, DriverPayment
+from operators.serializers import OperatorSerializer, OrderCreateSerializer, OrderGetSerializer, \
+    DriverPaymentSerializer, DriverPaymentPostSerializer
 from user.views import operator_chack
 
 
@@ -237,4 +238,45 @@ class DriverUpdateView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DriverPaymentPost(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(request_body=DriverPaymentPostSerializer)
+    def post(self, request):
+        operator_chack(request.user.role)
+        serializer = DriverPaymentPostSerializer(data=request.data)
+
+        if serializer.is_valid():
+            driver = serializer.validated_data['driver']
+            driver.balance += serializer.validated_data['amount']
+            driver.save()
+            serializer.save(status='otkazildi')
+            return Response({'success': True,
+                             'data': serializer.data}, status=201)
+        return Response({'detail': 'Error',
+                         'success': False,
+                         'data': serializer.errors}, status=401)
+
+
+class DriverPaymenView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('status', openapi.IN_QUERY, type=openapi.TYPE_STRING,
+                          description='status = Buyurtma holati (otkazildi, otkazildi)',
+                          enum=['otkazildi', 'yechib_olindi'])
+    ])
+
+    def get(self, request):
+        operator_chack(request.user.role)
+        if request.query_params.get('status'):
+            driver = DriverPayment.objects.filter(status=request.query_params.get('status')).all().order_by('-id')
+        else:
+            driver = DriverPayment.objects.all().order_by('-id')
+        serializer = DriverPaymentSerializer(driver, many=True)
+        return Response({'detail': 'Success', 'data': serializer.data}, status=200)
 

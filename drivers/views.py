@@ -3,7 +3,6 @@ from datetime import datetime
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from drf_yasg import openapi
-from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,11 +12,9 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from heycaby.eskiz import SendSmsApiWithEskiz
 from drivers.models import Drivers, DriverLocation
 from drivers.serializers import DriversSerializer, DriverLocationSerializer
-from operators.models import Order
+from operators.models import Order, DriverPayment
 from operators.serializers import OrderCreateSerializer
-from user.models import CustomUser
-from user.serializers import CustomTokenSerializer
-from user.views import generate_sms_code, driver_chack, operator_chack
+from user.views import generate_sms_code, driver_chack
 
 
 class DriverProfilView(APIView):
@@ -273,7 +270,10 @@ class DriverFinishedOrder(APIView):
             order.save()
 
             driver.is_busy = False
+            driver.balance -= int(order.total_sum)*int(driver.category.percent)/100
             driver.save()
+
+            DriverPayment.objects.create(amount=int(order.total_sum)*int(driver.category.percent)/100, driver=driver, status='yechib_olindi')
 
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
@@ -343,3 +343,10 @@ class DriverCancelOrder(APIView):
                              }, status=201)
         return Response({'detail': 'Buyurtma mavjud emas yoki bu Driverga ulanmagan',
                          'success': False}, status=401)
+
+
+class TestIp(APIView):
+    def get(self, request):
+        ip = request.META.get("HTTP_X_FORWARDED_FOR")
+        ip2 = request.META.get("REMOTE_ADDR")
+        return Response({'ip': ip, "ip2": ip2})
