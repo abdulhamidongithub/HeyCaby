@@ -166,6 +166,9 @@ class DriverAcceptOrder(APIView):
         if driver.is_busy:
             return Response({'detail': 'Driverda tugatilmagan buyurtma bor',
                              'success': False}, status=401)
+        if driver.category.driver_min_balance > driver.balance:
+            return Response({'detail': 'Iltimos balancingizni toldiring',
+                             'success': False}, status=401)
 
         order = Order.objects.filter(id=order_id).first()
         if order is None:
