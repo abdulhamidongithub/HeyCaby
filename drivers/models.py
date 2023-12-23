@@ -12,6 +12,7 @@ class CarCategory(models.Model):
     for_woman_cost = models.PositiveIntegerField()
     sum_for_per_km = models.PositiveIntegerField(default=1500)
     percent = models.IntegerField(default=0)
+    driver_min_balance = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.type
