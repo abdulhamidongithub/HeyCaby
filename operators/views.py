@@ -217,7 +217,7 @@ class DriverUpdateView(APIView):
     @swagger_auto_schema(
         request_body=DriversSerializer,
         manual_parameters=[
-        openapi.Parameter('driver_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=True)])
+            openapi.Parameter('driver_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=True)])
     def put(self, request):
         """
         Driver update
@@ -234,4 +234,3 @@ class DriverUpdateView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
