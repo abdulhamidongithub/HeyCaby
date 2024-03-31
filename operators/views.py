@@ -13,6 +13,7 @@ from drivers.serializers import DriversSerializer, CarCategorySerializer
 from operators.models import Operators, Order, DriverPayment
 from operators.serializers import OperatorSerializer, OrderCreateSerializer, OrderGetSerializer, \
     DriverPaymentSerializer, DriverPaymentPostSerializer
+from payments.models import Payment
 from user.views import operator_chack
 
 
@@ -221,7 +222,7 @@ class DriverUpdateView(APIView):
     @swagger_auto_schema(
         request_body=DriversSerializer,
         manual_parameters=[
-        openapi.Parameter('driver_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=True)])
+            openapi.Parameter('driver_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, required=True)])
     def put(self, request):
         """
         Driver update
@@ -254,6 +255,13 @@ class DriverPaymentPost(APIView):
             driver.balance += serializer.validated_data['amount']
             driver.save()
             serializer.save(status='otkazildi')
+            Payment.objects.create(
+                driver=driver,
+                amount=serializer.validated_data['amount'],
+                type='Office',
+                reciever='',
+                completed=True
+            )
             return Response({'success': True,
                              'data': serializer.data}, status=201)
         return Response({'detail': 'Error',
@@ -270,7 +278,6 @@ class DriverPaymenView(APIView):
                           description='status = Buyurtma holati (otkazildi, otkazildi)',
                           enum=['otkazildi', 'yechib_olindi'])
     ])
-
     def get(self, request):
         operator_chack(request.user.role)
         if request.query_params.get('status'):
