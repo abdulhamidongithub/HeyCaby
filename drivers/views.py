@@ -3,7 +3,6 @@ from datetime import datetime
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from drf_yasg import openapi
-from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,11 +12,9 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from heycaby.eskiz import SendSmsApiWithEskiz
 from drivers.models import Drivers, DriverLocation
 from drivers.serializers import DriversSerializer, DriverLocationSerializer
-from operators.models import Order
+from operators.models import Order, DriverPayment
 from operators.serializers import OrderCreateSerializer
-from user.models import CustomUser
-from user.serializers import CustomTokenSerializer
-from user.views import generate_sms_code, driver_chack, operator_chack
+from user.views import generate_sms_code, driver_chack
 
 
 class DriverProfilView(APIView):
@@ -151,7 +148,7 @@ class DriverLocationPost(APIView):
                              'data': serializer.data}, status=201)
         return Response({'detail': 'Error',
                          'success': False,
-                         'data': serializer.errors})
+                         'data': serializer.errors}, status=401)
 
 
 class DriverAcceptOrder(APIView):
@@ -168,12 +165,15 @@ class DriverAcceptOrder(APIView):
         driver = Drivers.objects.filter(id=request.user.id).first()
         if driver.is_busy:
             return Response({'detail': 'Driverda tugatilmagan buyurtma bor',
-                             'success': False})
+                             'success': False}, status=401)
+        if driver.category.driver_min_balance > driver.balance:
+            return Response({'detail': 'Iltimos balancingizni toldiring',
+                             'success': False}, status=401)
 
         order = Order.objects.filter(id=order_id).first()
         if order is None:
             return Response({'detail': 'Order not found',
-                             'success': False})
+                             'success': False}, status=404)
         if order.order_status == 'active':
             order.driver = driver
             order.order_status = 'accept'
@@ -190,6 +190,13 @@ class DriverAcceptOrder(APIView):
                 },
             )
 
+            async_to_sync(channel_layer.group_send)(
+                "driver_location_group",
+                {
+                    "type": "add_new_driver_location",
+                },
+            )
+
             driver.is_busy = True
             driver.save()
 
@@ -199,7 +206,7 @@ class DriverAcceptOrder(APIView):
                              'phone': order.driver.phone,
                              }, status=201)
         return Response({'detail': 'Buyurtma Activ emas',
-                         'success': False})
+                         'success': False}, status=404)
 
 
 class DriverStartOrder(APIView):
@@ -218,7 +225,7 @@ class DriverStartOrder(APIView):
         order = Order.objects.filter(id=order_id).first()
         if not order:
             return Response({'detail': 'Order not found',
-                             'success': False})
+                             'success': False}, status=404)
 
         if order.order_status == 'accept' and order.driver.id == request.user.id:
             order.driver = driver
@@ -230,7 +237,7 @@ class DriverStartOrder(APIView):
                              'phone': order.driver.phone,
                              }, status=201)
         return Response({'detail': 'Buyurtma mavjud emas',
-                         'success': False})
+                         'success': False}, status=404)
 
 
 class DriverFinishedOrder(APIView):
@@ -256,7 +263,7 @@ class DriverFinishedOrder(APIView):
         order = Order.objects.filter(id=order_id).first()
         if not order:
             return Response({'detail': 'Order not found',
-                             'success': False})
+                             'success': False}, status=404)
 
         if order.order_status == 'started' and order.driver.id == driver.id:
             order.order_status = 'finished'
@@ -266,7 +273,18 @@ class DriverFinishedOrder(APIView):
             order.save()
 
             driver.is_busy = False
+            driver.balance -= int(order.total_sum)*int(driver.category.percent)/100
             driver.save()
+
+            DriverPayment.objects.create(amount=int(order.total_sum)*int(driver.category.percent)/100, driver=driver, status='yechib_olindi')
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "driver_location_group",
+                {
+                    "type": "add_new_driver_location",
+                },
+            )
 
             return Response({'success': True,
                              'first_name': order.driver.first_name,
@@ -274,7 +292,7 @@ class DriverFinishedOrder(APIView):
                              'phone': order.driver.phone,
                              }, status=201)
         return Response({'detail': 'Buyurtma Activ emas',
-                         'success': False})
+                         'success': False}, status=401)
 
 
 class DriverCancelOrder(APIView):
@@ -293,7 +311,7 @@ class DriverCancelOrder(APIView):
         order = Order.objects.filter(id=order_id).first()
         if not order:
             return Response({'detail': 'Order not found',
-                             'success': False})
+                             'success': False}, status=404)
 
         if order.order_status == 'accept' and order.driver.id == request.user.id:
             order.driver = driver
@@ -311,6 +329,13 @@ class DriverCancelOrder(APIView):
                 },
             )
 
+            async_to_sync(channel_layer.group_send)(
+                "driver_location_group",
+                {
+                    "type": "add_new_driver_location",
+                },
+            )
+
             driver.is_busy = False
             driver.save()
 
@@ -320,4 +345,11 @@ class DriverCancelOrder(APIView):
                              'phone': order.driver.phone,
                              }, status=201)
         return Response({'detail': 'Buyurtma mavjud emas yoki bu Driverga ulanmagan',
-                         'success': False})
+                         'success': False}, status=401)
+
+
+class TestIp(APIView):
+    def get(self, request):
+        ip = request.META.get("HTTP_X_FORWARDED_FOR")
+        ip2 = request.META.get("REMOTE_ADDR")
+        return Response({'ip': ip, "ip2": ip2})

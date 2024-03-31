@@ -13,4 +13,6 @@ urlpatterns = [
     path('order_delete/', OrderDelete.as_view()),
     path('driver_delete/', DriverDelete.as_view()),
     path('driver_update/', DriverUpdateView.as_view()),
+    path('payment_post/', DriverPaymentPost.as_view()),
+    path('payment_get/', DriverPaymenView.as_view()),
 ]
