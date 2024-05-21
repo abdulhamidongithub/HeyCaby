@@ -5,6 +5,8 @@ from .models import *
 
 admin.site.register(Client)
 admin.site.register(Order)
+
+
 class OperatorAdmin(admin.ModelAdmin):
     list_display = ["id", "username", "first_name", "phone"]
     list_display_links = ('id', 'username')
@@ -13,6 +15,7 @@ class OperatorAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Operators, OperatorAdmin)
+
 
 class DriverPaymentAdmin(admin.ModelAdmin):
     list_display = ["id", "driver", "amount", "datetime"]
