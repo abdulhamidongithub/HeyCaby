@@ -46,7 +46,7 @@ class DriverLoginView(APIView):
 
         if driver.username != '911111111':
             code = generate_sms_code()
-            message = f"Tasdiqlash kodingiz: {code}"
+            message = f"Kirakashgo mobil ilovasi uchun tasdiqlash kodingiz: {code}"
             phone = int(username)
             eskiz_api = SendSmsApiWithEskiz(message=message, phone=phone)
             eskiz_api.send()
