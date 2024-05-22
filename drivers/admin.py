@@ -11,4 +11,3 @@ class DriverAdmin(admin.ModelAdmin):
 admin.site.register(Drivers, DriverAdmin)
 admin.site.register(CarCategory)
 admin.site.register(DriverLocation)
-

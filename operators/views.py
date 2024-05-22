@@ -15,6 +15,7 @@ from operators.serializers import OperatorSerializer, OrderCreateSerializer, Ord
     DriverPaymentSerializer, DriverPaymentPostSerializer
 from payments.models import Payment
 from user.views import operator_chack
+from utils.pagination import paginate
 
 
 # class OperatorCreateView(APIView):
@@ -76,7 +77,9 @@ class OrdersView(APIView):
     @swagger_auto_schema(manual_parameters=[
         openapi.Parameter('status', openapi.IN_QUERY, type=openapi.TYPE_STRING,
                           description='status = Buyurtma holati (active, accept, started, finished)',
-                          enum=['active', 'accept', 'started', 'finished'])
+                          enum=['active', 'accept', 'started', 'finished']),
+        openapi.Parameter('limit', openapi.IN_QUERY, type=openapi.TYPE_INTEGER),
+        openapi.Parameter('offset', openapi.IN_QUERY, type=openapi.TYPE_INTEGER),
     ])
     def get(self, request):
         operator_chack(request.user.role)
@@ -90,7 +93,8 @@ class OrdersView(APIView):
         else:
             orders = Order.objects.all()
         serializer = OrderGetSerializer(orders, many=True)
-        return Response({'detail': 'Success', 'data': serializer.data}, status=200)
+        # return Response({'detail': 'Success', 'data': serializer.data}, status=200)
+        return paginate(orders, OrderGetSerializer, request)
 
 
 class OperatorGet(APIView):
@@ -109,12 +113,17 @@ class DriversGetOperator(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('limit', openapi.IN_QUERY, type=openapi.TYPE_INTEGER),
+        openapi.Parameter('offset', openapi.IN_QUERY, type=openapi.TYPE_INTEGER),
+    ])
     def get(self, request):
         operator_chack(request.user.role)
 
         drivers = Drivers.objects.all()
         serializer = DriversSerializer(drivers, many=True)
-        return Response({'detail': 'Success', 'data': serializer.data}, status=200)
+        # return Response({'detail': 'Success', 'data': serializer.data}, status=200)
+        return paginate(drivers, DriversSerializer, request)
 
 
 class OperatorDriverDetailView(APIView):
