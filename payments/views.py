@@ -33,16 +33,7 @@ class PaymentsAPIView(APIView):
         serializer = PaymentSerializer(data=payment)
         serializer.is_valid(raise_exception=True)
         valid_data = serializer.validated_data
-        if payment.get("type") == "Office":
-            Payment.objects.create(
-                driver=Drivers.objects.get(id=valid_data.get("driver")),
-                amount=valid_data.get("amount"),
-                type=valid_data.get("type"),
-                reciever=valid_data.get("reciever"),
-                completed=True
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        elif payment.get("type") == "Click":
+        if payment.get("type") == "Click":
             payment = Payment.objects.create(
                 driver=Drivers.objects.get(id=valid_data.get("driver")),
                 amount=valid_data.get("amount"),
@@ -74,4 +65,12 @@ class PaymentsAPIView(APIView):
             return Response({
                 "link": url
             }, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            Payment.objects.create(
+                driver=Drivers.objects.get(id=valid_data.get("driver")),
+                amount=valid_data.get("amount"),
+                type=valid_data.get("type"),
+                reciever=valid_data.get("reciever"),
+                completed=True
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)

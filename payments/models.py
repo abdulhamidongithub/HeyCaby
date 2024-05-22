@@ -23,4 +23,4 @@ class Payment(models.Model):
     completed = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.driver.fullname} {self.amount}"
+        return f"{self.driver.first_name} {self.amount}"
